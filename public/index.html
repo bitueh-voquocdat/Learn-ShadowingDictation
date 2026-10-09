@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#2451db" />
+    <meta
+      name="description"
+      content="Tạo bài luyện nghe, dictation và shadowing theo câu; ghi âm, lưu tiến độ và xuất bài học."
+    />
+    <title>ShadowLab · Listen, Write, Speak</title>
+    <link rel="icon" href="/icon.svg" />
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.mjs"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <img src="/icon.svg" width="34" height="34" alt="" />
+        <div>
+          <strong>ShadowLab</strong><small>Listen. Write. Speak.</small>
+        </div>
+      </div>
+      <nav class="app-tabs" aria-label="Ứng dụng">
+        <button id="study-tab" class="active">Luyện tập</button
+        ><button id="tts-tab">Text → MP3</button>
+      </nav>
+      <div class="top-actions">
+        <button
+          id="sync-settings"
+          class="sync-pill"
+          title="Đồng bộ và liên kết riêng"
+        >
+          <span id="save-state" role="status"
+            >Đang kết nối Firebase…</span
+          ></button
+        ><button id="help" class="quiet" aria-label="Hướng dẫn">?</button
+        ><button id="open-file" class="quiet">Mở bài</button
+        ><button id="export" class="outline" disabled>↓ Lưu file bài</button
+        ><button id="new" class="primary">+ Tạo bài</button>
+      </div>
+    </header>
+    <div class="layout">
+      <main>
+        <p
+          id="global-status"
+          class="global-status"
+          role="status"
+          aria-live="polite"
+        ></p>
+        <section id="empty" class="empty">
+          <div class="picker-heading">
+            <div>
+              <span class="eyebrow">YOUR PRACTICE SPACE</span>
+              <h1>Chọn bài để tiếp tục</h1>
+              <p id="lesson-count"></p>
+            </div>
+            <label class="search-label"
+              ><span class="sr-only">Tìm bài học</span
+              ><input
+                id="lesson-search"
+                type="search"
+                placeholder="Tìm tên bài…"
+            /></label>
+          </div>
+          <div id="library" class="lesson-grid"></div>
+          <div id="welcome">
+            <div class="empty-mark">↗</div>
+            <h1>Một đoạn văn. Bốn bước luyện.</h1>
+            <p>
+              Dán văn bản hoặc phụ đề, chọn giọng UK và bắt đầu luyện từng câu.
+            </p>
+            <button id="empty-new" class="primary">Tạo bài đầu tiên</button
+            ><button id="demo" class="outline">Thử hội thoại mẫu</button>
+            <p class="subtle">TXT · SRT · VTT · File bài ShadowLab</p>
+          </div>
+        </section>
+        <section id="workspace" hidden>
+          <div class="lesson-heading">
+            <div>
+              <h1 id="lesson-title"></h1>
+              <p id="lesson-meta"></p>
+            </div>
+            <div class="heading-tools">
+              <button id="change-lesson" class="outline">← Đổi bài</button
+              ><button id="show-notes" class="quiet">Ghi chú</button
+              ><button id="show-settings" class="outline">
+                Giọng & thiết đặt</button
+              ><button id="prepare" class="outline">Chuẩn bị audio</button
+              ><button
+                id="delete-lesson"
+                class="quiet"
+                title="Xóa bài khỏi danh sách"
+              >
+                Xóa bài
+              </button>
+            </div>
+          </div>
+          <nav class="steps" aria-label="Quy trình luyện tập">
+            <button data-mode="listen">1 <span>Listen</span></button
+            ><button data-mode="dict">2 <span>Dictation</span></button
+            ><button data-mode="shadow">3 <span>Shadowing</span></button
+            ><button data-mode="review">4 <span>Review</span></button>
+          </nav>
+          <div id="study">
+            <section class="practice">
+              <div class="player-panel">
+                <div class="sentence-header">
+                  <div>
+                    <span id="sentence-position"></span
+                    ><span id="speaker" class="speaker"></span
+                    ><span id="timing-tag" class="subtle"></span>
+                  </div>
+                  <div>
+                    <button
+                      id="star"
+                      class="icon-button"
+                      title="Lưu câu khó"
+                      aria-label="Lưu câu khó"
+                      aria-pressed="false"
+                    >
+                      ☆</button
+                    ><button id="edit-sentence" class="quiet">Sửa câu</button>
+                  </div>
+                </div>
+                <div id="stage" class="stage">
+                  <video id="model" preload="metadata" playsinline></video>
+                  <div id="caption" class="caption" aria-label="Phụ đề"></div>
+                  <p id="caption-hidden" hidden>
+                    Nghe kỹ và ghi lại những gì bạn nghe.
+                  </p>
+                  <div id="translation" class="translation" hidden></div>
+                </div>
+                <div class="transport">
+                  <button id="prev" class="icon-button" aria-label="Câu trước">
+                    ‹</button
+                  ><button id="play" class="play" aria-label="Nghe câu">
+                    ▶</button
+                  ><button id="pause" class="outline" disabled>Tạm dừng</button
+                  ><button id="next" class="icon-button" aria-label="Câu tiếp">
+                    ›</button
+                  ><button id="stop" class="quiet">Dừng</button>
+                  <div class="transport-right">
+                    <label for="speed" class="sr-only">Tốc độ nghe</label
+                    ><select id="speed">
+                      <option value="0.5">0.5×</option>
+                      <option value="0.75">0.75×</option>
+                      <option value="1">1×</option>
+                      <option value="1.25">1.25×</option>
+                      <option value="1.5">1.5×</option>
+                      <option value="2">2×</option></select
+                    ><button
+                      id="download-audio"
+                      class="quiet"
+                      title="Tải MP3 của câu"
+                    >
+                      ↓ MP3
+                    </button>
+                  </div>
+                </div>
+                <div class="timeline">
+                  <span id="elapsed">0:00</span
+                  ><input
+                    id="seek"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="0"
+                    aria-label="Tua trong câu"
+                    disabled
+                  /><span id="duration">0:00</span>
+                </div>
+                <div class="caption-options">
+                  <label><input id="captions" type="checkbox" />Phụ đề</label
+                  ><label
+                    ><input id="show-translation" type="checkbox" />Bản
+                    dịch</label
+                  ><label
+                    ><input id="auto-next" type="checkbox" />Tự sang câu</label
+                  ><span id="audio-status" role="status">Chưa phát</span>
+                </div>
+                <section class="sentence-strip">
+                  <label for="jump">Chuyển câu</label
+                  ><select id="jump"></select
+                  ><progress id="lesson-progress" max="1" value="0"></progress
+                  ><span id="progress-text"></span>
+                </section>
+              </div>
+              <div class="exercise-panel">
+                <div id="listen-pane">
+                  <div class="pane-heading">
+                    <h2>Listen · Nghe hiểu</h2>
+                    <button id="listen-all" class="outline">
+                      Nghe toàn bài
+                    </button>
+                  </div>
+                  <p class="subtle">
+                    Bấm một từ để nghe lại. Giọng UK có mốc từng từ; audio gốc
+                    sẽ phát lại câu nếu chưa có căn chỉnh từng từ.
+                  </p>
+                  <div id="transcript-list" class="transcript-list"></div>
+                </div>
+                <div id="dict-pane" hidden>
+                  <div class="pane-heading">
+                    <h2>Dictation · Nghe và viết</h2>
+                    <select id="dict-type">
+                      <option value="full">Full dictation</option>
+                      <option value="blanks">Fill in the blanks</option>
+                    </select>
+                  </div>
+                  <textarea
+                    id="dict-answer"
+                    rows="3"
+                    lang="en-GB"
+                    spellcheck="false"
+                    autocomplete="off"
+                    placeholder="Type what you hear…"
+                    maxlength="3000"
+                    aria-label="Câu trả lời dictation"
+                  ></textarea>
+                  <div id="blanks" hidden></div>
+                  <div class="exercise-actions">
+                    <button id="check" class="primary">Kiểm tra</button
+                    ><button id="hint" class="outline">Gợi ý</button
+                    ><button id="retry" class="quiet">Làm lại</button
+                    ><label
+                      ><input id="strict" type="checkbox" />Chấm nghiêm
+                      ngặt</label
+                    >
+                  </div>
+                  <p id="hint-text" class="hint" hidden></p>
+                  <div id="dict-result" class="result"></div>
+                  <p id="dict-stats" class="subtle"></p>
+                </div>
+                <div id="shadow-pane" hidden>
+                  <div class="pane-heading">
+                    <h2>Shadowing · Nghe và nói</h2>
+                    <select id="shadow-mode">
+                      <option value="repeat">Listen & Repeat</option>
+                      <option value="simultaneous">Simultaneous</option>
+                      <option value="delayed">Delayed</option>
+                      <option value="continuous">Continuous</option>
+                    </select>
+                  </div>
+                  <p id="shadow-description" class="subtle"></p>
+                  <div class="exercise-actions">
+                    <button id="shadow-run" class="primary">
+                      Bắt đầu luyện</button
+                    ><button id="record" class="outline">● Ghi âm</button
+                    ><button id="finish-record" class="danger" hidden>
+                      Dừng ghi âm</button
+                    ><label
+                      ><input id="auto-record" type="checkbox" />Tự ghi âm trong
+                      lượt luyện</label
+                    >
+                  </div>
+                  <p id="record-state" role="status" class="record-state"></p>
+                  <div class="record-compare">
+                    <label for="spoken-text"
+                      >Lời nói được nhận diện
+                      <span class="subtle">có thể chỉnh bản chép</span></label
+                    ><textarea
+                      id="spoken-text"
+                      rows="2"
+                      maxlength="3000"
+                      placeholder="Bản chép lời nói sẽ xuất hiện ở đây…"
+                    ></textarea
+                    ><button id="compare-speech" class="outline">
+                      Đối chiếu với câu gốc
+                    </button>
+                    <div id="record-playback" hidden>
+                      <label>Bản ghi của bạn</label
+                      ><audio id="recorded" controls></audio
+                      ><button id="download-record" class="quiet">
+                        ↓ Tải bản ghi
+                      </button>
+                    </div>
+                  </div>
+                  <div id="speech-result" class="result"></div>
+                  <p class="subtle asr-note">
+                    Đây là đối chiếu bản chép lời nói, không phải điểm phát âm
+                    từng âm. Nhận diện có thể sai vì tiếng ồn hoặc giọng nói.
+                    Dùng tai nghe khi vừa nghe vừa ghi âm.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+          <section id="review-pane" class="review" hidden>
+            <div id="review-summary" class="review-summary"></div>
+            <div class="pane-heading">
+              <h2>Từ & câu cần ôn</h2>
+              <button id="review-run" class="primary">
+                Luyện các câu cần ôn
+              </button>
+            </div>
+            <div id="mistakes"></div>
+            <h2 class="small-heading">Câu khó / đến hạn</h2>
+            <div id="due-list"></div>
+          </section>
+        </section>
+        <section id="tts-workspace" class="tts-workspace" hidden>
+          <div class="lesson-heading">
+            <div>
+              <span class="eyebrow">TEXT TO SPEECH</span>
+              <h1>Văn bản thành giọng đọc</h1>
+              <p>4 giọng UK · tải MP3 · lịch sử tự lưu</p>
+            </div>
+            <button id="tts-clear" class="outline">+ Đoạn mới</button>
+          </div>
+          <div class="tts-layout">
+            <div class="tts-editor">
+              <label
+                >Tên đoạn<input
+                  id="tts-title"
+                  maxlength="120"
+                  placeholder="A story for tomorrow" /></label
+              ><label class="tts-text-label"
+                >Văn bản tiếng Anh<textarea
+                  id="tts-text"
+                  maxlength="30000"
+                  lang="en-GB"
+                  spellcheck="false"
+                  placeholder="Paste your English text here…"
+                ></textarea>
+              </label>
+              <div class="tts-controls">
+                <label>Giọng UK<select id="tts-voice"></select></label
+                ><label
+                  >Tốc độ tạo giọng (%)<input
+                    id="tts-rate"
+                    type="number"
+                    min="-50"
+                    max="50"
+                    step="5"
+                    value="0" /></label
+                ><label
+                  >Cao độ (Hz)<input
+                    id="tts-pitch"
+                    type="number"
+                    min="-50"
+                    max="50"
+                    step="5"
+                    value="0"
+                /></label>
+              </div>
+              <div class="exercise-actions">
+                <button id="tts-generate" class="primary">Tạo giọng đọc</button
+                ><button id="tts-cancel" class="quiet" hidden>Hủy</button
+                ><span id="tts-status" role="status" class="subtle"></span>
+              </div>
+              <div id="tts-output" hidden>
+                <div
+                  id="tts-caption"
+                  class="tts-caption"
+                  aria-label="Phụ đề MP3"
+                ></div>
+                <audio id="tts-player" preload="auto" controls></audio>
+                <div class="exercise-actions">
+                  <label
+                    >Tốc độ nghe<select id="tts-speed">
+                      <option value="0.5">0.5×</option>
+                      <option value="0.75">0.75×</option>
+                      <option value="1" selected>1×</option>
+                      <option value="1.25">1.25×</option>
+                      <option value="1.5">1.5×</option>
+                      <option value="2">2×</option>
+                    </select></label
+                  ><button id="tts-download" class="outline">↓ Tải MP3</button
+                  ><button id="tts-study" class="quiet">
+                    Tạo bài luyện từ đoạn này</button
+                  ><button id="tts-delete" class="quiet">Xóa đoạn</button>
+                </div>
+              </div>
+            </div>
+            <section class="tts-history">
+              <div class="pane-heading">
+                <h2>Lịch sử chuyển đổi</h2>
+                <span id="tts-count" class="subtle"></span>
+              </div>
+              <div id="tts-history"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+    <dialog id="settings-dialog">
+      <div class="dialog-heading">
+        <h2>Giọng đọc & thiết đặt bài</h2>
+        <button
+          class="icon-button"
+          data-close="settings-dialog"
+          aria-label="Đóng"
+        >
+          ×
+        </button>
+      </div>
+      <div class="settings-grid">
+        <label
+          >Khoảng chờ / độ trễ (giây)<input
+            id="gap"
+            type="number"
+            min="0"
+            max="15"
+            step="0.5"
+            value="3" /></label
+        ><label
+          >Lặp mỗi câu<select id="repeat">
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>5</option>
+          </select></label
+        ><label
+          >Vai bạn luyện<select id="role">
+            <option value="">Mọi vai</option>
+          </select></label
+        ><label
+          >Nguồn âm thanh<select id="source">
+            <option value="tts">Giọng UK từ văn bản</option>
+            <option value="original">Audio/video gốc + mốc phụ đề</option>
+          </select></label
+        ><label>Giọng mặc định<select id="voice"></select></label>
+        <div>
+          <button id="attach-source" class="outline">
+            Chọn audio/video gốc</button
+          ><small id="source-name"></small>
+        </div>
+      </div>
+      <div id="speaker-voices" class="speaker-voices"></div>
+      <button
+        id="download-all"
+        class="outline"
+        title="Ghép MP3 giọng UK theo thứ tự câu, ở tốc độ gốc"
+      >
+        ↓ MP3 toàn bài · giọng UK
+      </button>
+      <p class="subtle">
+        Vai được chọn: app đọc các vai còn lại và dành lượt của vai bạn để nói.
+        Bản dịch là nội dung bạn tự thêm trong “Sửa câu”.
+      </p>
+      <p class="subtle">
+        Tốc độ/cao độ ở đây dùng khi tạo MP3. Tốc độ nghe 0.5×–2× ở thanh phát
+        có thể đổi ngay khi đang nghe. Mỗi bài giữ thiết đặt riêng.
+      </p>
+    </dialog>
+    <dialog id="notes-dialog">
+      <div class="dialog-heading">
+        <h2>Ghi chú</h2>
+        <button class="icon-button" data-close="notes-dialog" aria-label="Đóng">
+          ×
+        </button>
+      </div>
+      <label>Ghi chú câu đang học</label
+      ><textarea
+        id="notes"
+        rows="2"
+        maxlength="2000"
+        placeholder="Từ mới, nối âm, điều cần nhớ…"
+      ></textarea
+      ><label
+        >Ghi chú toàn bài<textarea
+          id="lesson-notes"
+          rows="5"
+          maxlength="10000"
+          placeholder="Mục tiêu, từ vựng, điều cần ôn…"
+        ></textarea>
+      </label>
+      <p class="subtle">Tự lưu cùng bài và đồng bộ Firebase.</p>
+    </dialog>
+    <dialog id="sync-dialog">
+      <div class="dialog-heading">
+        <h2>Đồng bộ giữa các thiết bị</h2>
+        <button class="icon-button" data-close="sync-dialog" aria-label="Đóng">
+          ×
+        </button>
+      </div>
+      <p id="sync-detail" role="status"></p>
+      <label>Liên kết đồng bộ riêng<input id="sync-link" readonly /></label>
+      <p>
+        Giữ liên kết này để mở cùng bài và lịch sử MP3 trên thiết bị khác. Ai có
+        liên kết cũng có thể mở dữ liệu; hãy giữ riêng.
+      </p>
+      <div class="exercise-actions">
+        <button id="copy-sync" class="primary">Sao chép liên kết</button
+        ><button id="retry-sync" class="outline">Đồng bộ ngay</button>
+      </div>
+      <p class="subtle">
+        Bài và audio được mã hóa trước khi gửi lên Firestore. Khi mất mạng, thay
+        đổi được giữ trên máy và gửi lại khi có kết nối.
+      </p>
+    </dialog>
+    <dialog id="conflict-dialog">
+      <div class="dialog-heading"><h2>Chọn bản muốn giữ</h2></div>
+      <p id="conflict-detail"></p>
+      <p>
+        Cùng bài đã thay đổi trên hai thiết bị. Chọn phiên bản để tránh ghi đè
+        âm thầm.
+      </p>
+      <div class="exercise-actions">
+        <button id="keep-local" class="outline">Giữ bản trên máy này</button
+        ><button id="keep-cloud" class="primary">Mở bản Firebase</button>
+      </div>
+    </dialog>
+    <input
+      id="lesson-file"
+      class="sr-only"
+      type="file"
+      accept=".json,.shadow.json"
+      tabindex="-1"
+    /><input
+      id="source-file"
+      class="sr-only"
+      type="file"
+      accept="audio/*,video/*"
+      tabindex="-1"
+    />
+    <dialog id="create-dialog">
+      <form id="create-form">
+        <div class="dialog-heading">
+          <h2>Tạo bài luyện</h2>
+          <button
+            type="button"
+            data-close="create-dialog"
+            class="icon-button"
+            aria-label="Đóng"
+          >
+            ×
+          </button>
+        </div>
+        <label
+          >Tên bài<input
+            id="new-title"
+            maxlength="120"
+            placeholder="A conversation at the café"
+            required
+        /></label>
+        <div class="dialog-line">
+          <label for="new-text">Văn bản / phụ đề</label
+          ><button type="button" id="import-text" class="quiet">
+            Nhập TXT / SRT / VTT
+          </button>
+        </div>
+        <textarea
+          id="new-text"
+          rows="9"
+          maxlength="30000"
+          placeholder="Alice: Hi, Ryan. How was your day?&#10;Ryan: It was great. I met an old friend.&#10;&#10;Hoặc dán phụ đề SRT / VTT…"
+        ></textarea>
+        <div class="dialog-line">
+          <label
+            >Độ dài mỗi đoạn<select id="segment-size">
+              <option value="20">Ngắn · khoảng 8 giây</option>
+              <option value="32" selected>Vừa · khoảng 13 giây</option>
+              <option value="45">Dài · khoảng 18 giây</option>
+            </select></label
+          ><button type="button" id="analyse" class="outline">
+            Phân tích & chia câu
+          </button>
+        </div>
+        <p class="subtle">
+          Chia theo dấu câu, lượt nói và ranh giới mệnh đề; thời lượng từ văn
+          bản là ước lượng. Kiểm tra/sửa bên dưới trước khi tạo.
+        </p>
+        <div id="preview" class="preview"></div>
+        <p id="create-error" role="status" class="error-text"></p>
+        <div class="dialog-footer">
+          <button type="button" data-close="create-dialog" class="quiet">
+            Hủy</button
+          ><button id="create-confirm" type="submit" class="primary" disabled>
+            Tạo bài
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <input
+      id="text-file"
+      class="sr-only"
+      type="file"
+      accept=".txt,.srt,.vtt,text/plain"
+      tabindex="-1"
+    />
+    <dialog id="edit-dialog">
+      <form id="edit-form">
+        <div class="dialog-heading">
+          <h2>Sửa câu</h2>
+          <button
+            type="button"
+            data-close="edit-dialog"
+            class="icon-button"
+            aria-label="Đóng"
+          >
+            ×
+          </button>
+        </div>
+        <label
+          >Câu gốc<textarea
+            id="edit-text"
+            rows="4"
+            maxlength="1200"
+            required
+          ></textarea></label
+        ><label>Người nói<input id="edit-speaker" maxlength="40" /></label
+        ><label
+          >Bản dịch / diễn giải<textarea
+            id="edit-translation"
+            rows="2"
+            maxlength="2000"
+          ></textarea>
+        </label>
+        <div class="settings-grid">
+          <label
+            >Bắt đầu audio gốc (giây)<input
+              id="edit-start"
+              type="number"
+              min="0"
+              step="0.01" /></label
+          ><label
+            >Kết thúc audio gốc (giây)<input
+              id="edit-end"
+              type="number"
+              min="0"
+              step="0.01"
+          /></label>
+        </div>
+        <p class="subtle">
+          Sửa câu gốc sẽ đặt lại kết quả của câu đó để tránh chấm theo dữ liệu
+          cũ.
+        </p>
+        <p id="edit-error" class="error-text" role="status"></p>
+        <div class="dialog-footer">
+          <button class="primary" type="submit">Lưu câu</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="export-dialog">
+      <div class="dialog-heading">
+        <h2>Lưu bài để học lại</h2>
+        <button
+          class="icon-button"
+          data-close="export-dialog"
+          aria-label="Đóng"
+        >
+          ×
+        </button>
+      </div>
+      <p>
+        File chứa câu gốc, vai hội thoại, bản dịch, bản nháp, kết quả, từ cần
+        luyện và tiến độ.
+      </p>
+      <label class="check-label"
+        ><input id="include-audio" type="checkbox" checked />Kèm audio đã tạo,
+        file gốc và bản ghi đang có</label
+      >
+      <p class="subtle">
+        Kèm audio để nghe lại khi mất Internet trong trang đã mở. Chưa tạo giọng
+        nào thì giọng đó vẫn cần mạng. Tổng file tối đa khoảng 90 MB.
+      </p>
+      <p id="export-error" class="error-text" role="status"></p>
+      <button id="export-confirm" class="primary">↓ Xuất .shadow.json</button>
+    </dialog>
+    <dialog id="help-dialog">
+      <div class="dialog-heading">
+        <h2>Cách học với ShadowLab</h2>
+        <button class="icon-button" data-close="help-dialog" aria-label="Đóng">
+          ×
+        </button>
+      </div>
+      <ol>
+        <li>
+          <strong>Listen:</strong> nghe toàn bài; theo phụ đề và hiểu hội thoại.
+        </li>
+        <li>
+          <strong>Dictation:</strong> nghe từng câu, viết/điền từ, kiểm tra và
+          nghe lại chỗ sai.
+        </li>
+        <li>
+          <strong>Shadowing:</strong> nghe–nói lại hoặc nói đuổi, ghi âm và đối
+          chiếu bản chép.
+        </li>
+        <li>
+          <strong>Review:</strong> luyện từ/câu khó; đúng qua nhiều lượt rồi ôn
+          cách ngày.
+        </li>
+      </ol>
+      <p>
+        <strong>Phím:</strong> Alt + ← / → chuyển câu; Alt + P nghe câu; Ctrl/⌘
+        + Enter kiểm tra dictation. Phím tắt không ghi đè khi bạn đang gõ.
+      </p>
+      <p>
+        Nhận diện giọng nói phụ thuộc trình duyệt/dịch vụ mạng; audio có thể
+        được gửi đến dịch vụ nhận diện của trình duyệt. Ghi âm dùng microphone
+        trên HTTPS. Nếu nhận diện không hoạt động, vẫn ghi âm/nghe lại và nhập
+        bản chép thủ công để đối chiếu.
+      </p>
+      <p>
+        Tiến độ, giọng đọc, ghi chú và lịch sử MP3 tự lưu vào Firebase. Dùng
+        liên kết đồng bộ riêng để mở cùng dữ liệu trên máy khác, không cần tài
+        khoản. Audio được giữ trên máy để mở nhanh; file .shadow.json vẫn dùng
+        được để sao lưu và chuyển bài chủ động.
+      </p>
+      <p class="subtle">
+        Bấm từ khi dùng audio gốc sẽ nghe cả câu vì phụ đề chỉ cung cấp mốc câu;
+        app không tự đoán thời điểm từng từ. Các mốc được chia từ một cue dài
+        hoặc phụ đề chỉ có thời gian bắt đầu được ghi “ước lượng” và có thể
+        chỉnh.
+      </p>
+    </dialog>
+    <noscript>Hãy bật JavaScript để sử dụng ứng dụng.</noscript>
+  </body>
+</html>
