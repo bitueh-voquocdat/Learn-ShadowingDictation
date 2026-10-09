@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-10-09T05:15:57.088710+00:00",
+  "unitLogic": {
+    "passed": 26,
+    "failed": 0
+  },
+  "httpAPI": {
+    "passed": 7,
+    "failed": 0
+  },
+  "browserScenarios": {
+    "passed": 29,
+    "failed": 0,
+    "uncaughtJavaScriptErrors": 0,
+    "asr": "simulated transcripts, real MediaRecorder",
+    "playwright": "1.62.1",
+    "viewports": [
+      1365,
+      390
+    ]
+  },
+  "liveUKVoices": [
+    {
+      "voice": "en-GB-SoniaNeural",
+      "audioBytes": 26064,
+      "words": 8,
+      "duration": 4.344,
+      "ok": true
+    },
+    {
+      "voice": "en-GB-RyanNeural",
+      "audioBytes": 28800,
+      "words": 8,
+      "duration": 4.8,
+      "ok": true
+    },
+    {
+      "voice": "en-GB-LibbyNeural",
+      "audioBytes": 32400,
+      "words": 8,
+      "duration": 5.4,
+      "ok": true
+    },
+    {
+      "voice": "en-GB-ThomasNeural",
+      "audioBytes": 28656,
+      "words": 8,
+      "duration": 4.776,
+      "ok": true
+    }
+  ],
+  "vercelConfiguration": "passes official schema; no account deployment performed",
+  "totalAutomatedChecks": 62
+}

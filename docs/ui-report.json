@@ -1,0 +1,118 @@
+[
+  {
+    "name": "merging different dialogue roles is rejected",
+    "status": "passed"
+  },
+  {
+    "name": "create, split, preview merge, dialogue roles",
+    "status": "passed"
+  },
+  {
+    "name": "play, pause, seek, actual word timings, word replay",
+    "status": "passed"
+  },
+  {
+    "name": "speaker voice mapping, stop and navigation",
+    "status": "passed"
+  },
+  {
+    "name": "dictation missing word, four hints, retry, perfect answer",
+    "status": "passed"
+  },
+  {
+    "name": "strict grading and fill in blanks",
+    "status": "passed"
+  },
+  {
+    "name": "actual MediaRecorder, mocked recognition, comparison and track cleanup",
+    "status": "passed"
+  },
+  {
+    "name": "recording download",
+    "status": "passed"
+  },
+  {
+    "name": "late final recognition result retained when recording stops",
+    "status": "passed"
+  },
+  {
+    "name": "download combined MP3 of all dialogue turns",
+    "status": "passed"
+  },
+  {
+    "name": "cancel delayed flow on sentence change without deadlock",
+    "status": "passed"
+  },
+  {
+    "name": "cancel simultaneous recording, release microphone",
+    "status": "passed"
+  },
+  {
+    "name": "all four shadowing flows complete and release microphone",
+    "status": "passed"
+  },
+  {
+    "name": "automatic recording stop after speech-like signal then silence",
+    "status": "passed"
+  },
+  {
+    "name": "review errors, difficult sentences and notes",
+    "status": "passed"
+  },
+  {
+    "name": "export retains audio, recording, progress, errors, notes and hints",
+    "status": "passed"
+  },
+  {
+    "name": "fresh-browser file import and offline cached playback",
+    "status": "passed"
+  },
+  {
+    "name": "localStorage restores progress without storing media",
+    "status": "passed"
+  },
+  {
+    "name": "cancel in-flight synthesis on navigation",
+    "status": "passed"
+  },
+  {
+    "name": "original MP3, SRT synchronization, cue stop and honest word replay",
+    "status": "passed"
+  },
+  {
+    "name": "original MP4 video with caption overlay and sentence boundary stop",
+    "status": "passed"
+  },
+  {
+    "name": "reject reversed source timestamps",
+    "status": "passed"
+  },
+  {
+    "name": "source audio included in portable file",
+    "status": "passed"
+  },
+  {
+    "name": "desktop and mobile layouts, no horizontal overflow",
+    "status": "passed"
+  },
+  {
+    "name": "invalid lesson file preserves current lesson",
+    "status": "passed"
+  },
+  {
+    "name": "unsupported recognition still records without fake score",
+    "status": "passed"
+  },
+  {
+    "name": "microphone permission denial handled",
+    "status": "passed"
+  },
+  {
+    "name": "blocked localStorage still permits learning and file export",
+    "status": "passed"
+  },
+  {
+    "name": "corrupt localStorage preserved without silent overwrite",
+    "status": "passed"
+  }
+]
