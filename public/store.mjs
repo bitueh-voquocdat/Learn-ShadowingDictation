@@ -1,5 +1,11 @@
 import { validateLesson } from "./core.mjs";
 const KEY = "shadow-dictation-library-v2";
+export function memoryStorage() {
+  const values = new Map();
+  return {getItem: key => values.get(key) || null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: key => values.delete(key)};
+}
 export class LessonStore {
   constructor(storage, key = KEY, migrate = false) {
     this.key = key;
@@ -8,17 +14,8 @@ export class LessonStore {
     this.current = null;
     this.error = "";
     this.protected = false;
-    try {
-      this.storage = storage || globalThis.localStorage;
-    } catch {
-      this.storage = {
-        getItem: () => null,
-        setItem: () => {
-          throw Error("unavailable");
-        },
-      };
-      this.error = "Trình duyệt đang chặn lưu cục bộ. Hãy lưu bài thành file.";
-    }
+    this.transient = !storage;
+    this.storage = storage || memoryStorage();
   }
   load() {
     try {
@@ -40,6 +37,8 @@ export class LessonStore {
     return this;
   }
   save() {
+    // Runtime state stays in RAM. CloudSync is the durable store.
+    if (this.transient) return;
     if (this.protected)
       throw Error(
         "Dữ liệu cục bộ cũ đang lỗi nên chưa ghi đè. Bạn vẫn có thể xuất bài đang học thành file.",
