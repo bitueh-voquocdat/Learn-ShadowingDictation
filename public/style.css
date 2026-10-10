@@ -1,33 +1,33 @@
 @font-face {
-  font-family:Poppins;
-  src:url('/fonts/Poppins-Regular.ttf') format('truetype');
+  font-family:'Be Vietnam Pro';
+  src:url('/fonts/BeVietnamPro-Regular.ttf') format('truetype');
   font-weight:400;
   font-display:swap
 }
 
 @font-face {
-  font-family:Poppins;
-  src:url('/fonts/Poppins-Medium.ttf') format('truetype');
+  font-family:'Be Vietnam Pro';
+  src:url('/fonts/BeVietnamPro-Medium.ttf') format('truetype');
   font-weight:500;
   font-display:swap
 }
 
 @font-face {
-  font-family:Poppins;
-  src:url('/fonts/Poppins-SemiBold.ttf') format('truetype');
+  font-family:'Be Vietnam Pro';
+  src:url('/fonts/BeVietnamPro-SemiBold.ttf') format('truetype');
   font-weight:600;
   font-display:swap
 }
 
 @font-face {
-  font-family:Poppins;
-  src:url('/fonts/Poppins-Bold.ttf') format('truetype');
+  font-family:'Be Vietnam Pro';
+  src:url('/fonts/BeVietnamPro-Bold.ttf') format('truetype');
   font-weight:700;
   font-display:swap
 }
 
 :root {
-  font-family:Poppins,'Segoe UI',sans-serif;
+  font-family: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
   color:#16213e;
   background:#f7f9ff;
   font-size:13px;
