@@ -947,7 +947,8 @@ export function parseFile(text) {
     };
   }
   for (const [k, v] of Object.entries(assets.recordings || {}))
-    if (ids.has(k)) safe.recordings[k] = media(v);
+    if (ids.has(k)) safe.recordings[k] = {...media(v),
+      ...(Number.isFinite(v.createdAt) && v.createdAt > 0 ? {createdAt: v.createdAt} : {})};
   if (assets.source) safe.source = media(assets.source);
   if (assets.full) {
     safe.full = {};
