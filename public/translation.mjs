@@ -60,11 +60,103 @@ export function translationBatches(items) {
   return batches;
 }
 
+function abortable(promise, signal) {
+  if (!signal) return Promise.resolve(promise);
+  if (signal.aborted) return Promise.reject(signal.reason || new DOMException('Đã dừng', 'AbortError'));
+  return new Promise((resolve, reject) => {
+    const abort = () => { signal.removeEventListener('abort', abort); reject(signal.reason || new DOMException('Đã dừng', 'AbortError')); };
+    const done = fn => value => { signal.removeEventListener('abort', abort); fn(value); };
+    signal.addEventListener('abort', abort, {once: true});
+    Promise.resolve(promise).then(done(resolve), done(reject));
+  });
+}
+
+// Browser model: one instance shared by lessons; no translation server or API key.
+export class BrowserTranslation {
+  constructor({api = () => globalThis.Translator,
+    activation = () => globalThis.navigator?.userActivation?.isActive === true,
+    progress = () => {}, downloadTimeout = 180000} = {}) {
+    this.api = api; this.activation = activation; this.progress = progress;
+    this.downloadTimeout = downloadTimeout; this.translator = null; this.creating = null;
+  }
+  prepare() {
+    if (this.translator) return Promise.resolve(this.translator);
+    if (this.creating) return this.creating;
+    const API = this.api();
+    if (globalThis.isSecureContext === false)
+      return Promise.reject(Error('Dịch trong trình duyệt cần HTTPS hoặc localhost.'));
+    if (typeof API?.create !== 'function' || typeof API?.availability !== 'function')
+      return Promise.reject(Error('Trình duyệt này chưa hỗ trợ Translator API. Hãy mở app bằng Chrome mới trên máy tính.'));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(new DOMException(
+      'Tải bộ dịch quá thời gian chờ. Kiểm tra mạng rồi bấm Dịch phần còn thiếu.', 'TimeoutError')), this.downloadTimeout);
+    const options = {sourceLanguage: 'en', targetLanguage: 'vi'};
+    this.creating = Promise.resolve().then(async () => {
+      try {
+        const available = await abortable(API.availability(options), controller.signal);
+        if (available === 'unavailable') throw Error('Trình duyệt hoặc thiết bị chưa hỗ trợ dịch Anh → Việt.');
+        if (available !== 'available' && !this.activation()) {
+          throw Error('Bấm Dịch phần còn thiếu để cho trình duyệt tải bộ dịch Anh → Việt lần đầu.');
+        }
+        if (available !== 'available') this.progress(0);
+        const translator = await abortable(API.create({...options, signal: controller.signal,
+          monitor: monitor => monitor.addEventListener('downloadprogress', event => {
+            if (!controller.signal.aborted) this.progress(Math.max(0, Math.min(100, Math.round(event.loaded * 100))));
+          }),
+        }), controller.signal);
+        if (typeof translator?.translate !== 'function') throw Error('Bộ dịch của trình duyệt chưa sẵn sàng.');
+        this.translator = translator;
+        return translator;
+      } catch (error) {
+        if (error.name === 'NotAllowedError')
+          throw Error('Trình duyệt chưa cho phép khởi tạo bộ dịch. Bấm Dịch phần còn thiếu trên trang app được mở trực tiếp.');
+        throw error;
+      } finally {
+        clearTimeout(timer); this.creating = null; this.progress(null);
+      }
+    });
+    return this.creating;
+  }
+  async request(batch, signal) {
+    // Initial model download has its own timeout; lesson cancellation only stops waiting.
+    if (signal.aborted) throw signal.reason || new DOMException('Đã dừng', 'AbortError');
+    const translator = await abortable(this.prepare(), signal);
+    const controller = new AbortController(), abort = () => controller.abort(signal.reason);
+    if (signal.aborted) throw signal.reason || new DOMException('Đã dừng', 'AbortError');
+    signal.addEventListener('abort', abort, {once: true});
+    const timer = setTimeout(() => controller.abort(new DOMException('Dịch quá thời gian chờ. Hãy thử lại.', 'TimeoutError')), 55000);
+    const replies = [];
+    try {
+      // Translator processes requests sequentially. Preserve completed items if a later one fails.
+      for (const item of batch) {
+        try {
+          const translation = await abortable(translator.translate(item.text, {signal: controller.signal}), controller.signal);
+          if (typeof translation !== 'string' || !translation.trim() || translation.length > 8000)
+            throw Error('Trình duyệt trả bản dịch trống hoặc quá dài. Hãy thử lại.');
+          replies.push({...item, translation: translation.trim(), provider: 'browser'});
+        } catch (error) {
+          if (signal.aborted) throw error;
+          replies.error = error.message;
+          break;
+        }
+      }
+      return replies;
+    } finally { clearTimeout(timer); signal.removeEventListener('abort', abort); }
+  }
+}
+
 export class TranslationQueue {
-  constructor({fetcher = globalThis.fetch, save = async () => {}, change = () => {}, status = () => {}} = {}) {
+  constructor({fetcher, browser, save = async () => {}, change = () => {}, status = () => {}} = {}) {
     this.fetcher = fetcher; this.save = save; this.change = change; this.status = status;
     this.jobs = new Map();
+    this.downloadProgress = null;
+    this.browser = fetcher ? null : browser || new BrowserTranslation({progress: value => {
+      this.downloadProgress = value;
+      for (const job of this.jobs.values()) this.change(job.lesson);
+    }});
   }
+  prepare() { return this.browser ? this.browser.prepare() : Promise.resolve(null); }
+  get browserReady() { return !!this.browser?.translator; }
   ensure(lesson) {
     if (!lesson || lesson.kind === 'tts') return Promise.resolve(false);
     const existing = this.jobs.get(lesson.id);
@@ -90,6 +182,7 @@ export class TranslationQueue {
   }
   cancel(id) { this.jobs.get(id)?.controller.abort(); this.jobs.delete(id); }
   async request(batch, signal) {
+    if (this.browser) return this.browser.request(batch, signal);
     const controller = new AbortController();
     const abort = () => controller.abort();
     signal.addEventListener('abort', abort, {once: true});
@@ -121,7 +214,7 @@ export class TranslationQueue {
           for (const item of batch) {
             const reply = replies.find(r => r.id === item.id && r.text === item.text);
             if (!reply || typeof reply.translation !== 'string' || !reply.translation.trim() || reply.translation.length > 8000) {
-              failure ||= 'Một số đoạn chưa dịch được. Bạn có thể thử lại.'; continue;
+              failure ||= replies.error || 'Một số đoạn chưa dịch được. Bạn có thể thử lại.'; continue;
             }
             if (item.type === 'paragraph') paragraph.set(item.index, reply.translation.trim());
             else {
