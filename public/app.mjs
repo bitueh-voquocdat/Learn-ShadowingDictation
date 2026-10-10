@@ -1,3 +1,4 @@
+import { renderLessonCard, createLessonDeletion, installLessonDeletionStyles } from "./lesson-delete.mjs";
 import * as C from "./core.mjs";
 import { LessonStore } from "./store.mjs";
 import {
@@ -422,7 +423,7 @@ function renderLibrary() {
     list
       .map(
         (l) =>
-          `<button class="lesson-card ${l.id === store.current ? "active" : ""}" data-lesson="${esc(l.id)}"><strong>${esc(l.title)}</strong><small>${l.sentences.length} câu · ${C.readerStats(l).length} người đọc<br>${Object.values(l.progress).filter((p) => p.completed).length} hoàn tất · ${C.dueSentences(l).length} cần ôn</small><span class="card-footer"><span>Tiếp tục câu ${l.cursor + 1} →</span><span>${new Date(l.updatedAt).toLocaleDateString("vi-VN")}</span></span></button>`,
+          renderLessonCard(l, l.id === store.current, `<strong>${esc(l.title)}</strong><small>${l.sentences.length} câu · ${C.readerStats(l).length} người đọc<br>${Object.values(l.progress).filter((p) => p.completed).length} hoàn tất · ${C.dueSentences(l).length} cần ôn</small><span class="card-footer"><span>Tiếp tục câu ${l.cursor + 1} →</span><span>${new Date(l.updatedAt).toLocaleDateString("vi-VN")}</span></span>`),
       )
       .join("") || (query ? '<p class="subtle">Không tìm thấy bài.</p>' : "");
   renderLessonUI(appTab === "study" ? lesson() : null);
@@ -1801,27 +1802,31 @@ $("download-record").onclick = safe(() => {
       `recording-${lesson().cursor + 1}.${r.mime.includes("mp4") ? "m4a" : r.mime.includes("ogg") ? "ogg" : "webm"}`,
     );
 });
-$("delete-lesson").onclick = safe(async () => {
-  if (
-    !(await confirmAction(
-      "Xóa bài này khỏi danh sách và Firebase? File bài đã xuất vẫn được giữ.",
-      { title: "Xóa bài học này?", confirmLabel: "Xóa bài", danger: true },
-    ))
-  )
-    return;
-  await stopAll();
-  const id = lesson().id;
-  translations.cancel(id);
-  try {
-    store.remove(id);
-  } catch (e) {
-    say(e.message, "error");
-  }
-  assetLibrary.delete(id);
-  await media.remove(identity.scope + ":" + id);
-  await persist(true, id);
-  store.current = null;
-  render();
+// ShadowLab: lesson deletion patch
+installLessonDeletionStyles();
+const deleteLessonById = createLessonDeletion({
+  store, sync, media, scope: identity.scope, confirm: confirmAction,
+  beforeRemove: async (id, active) => {
+    translations.cancel(id);
+    if (active) await stopAll();
+    clearTimeout(saveTimers.get(id));
+    saveTimers.delete(id);
+  },
+  onRemove: (id, active) => {
+    assetLibrary.delete(id);
+    savedSnapshots.delete(id);
+    if (active) { resultCache.clear(); render(); }
+    else renderLibrary();
+  },
+  notify: say,
+});
+$("delete-lesson").onclick = safe(() => deleteLessonById(lesson()?.id));
+$("library").addEventListener("click", event => {
+  const button = event.target.closest?.("[data-delete-lesson]");
+  if (!button || !$("library").contains(button)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  void safe(() => deleteLessonById(button.dataset.deleteLesson))();
 });
 $("demo").onclick = safe(async () => {
   await stopAll();
