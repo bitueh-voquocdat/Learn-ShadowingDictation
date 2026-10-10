@@ -1,0 +1,46 @@
+[
+  {
+    "name": "automatic preload synthesizes a paragraph with one request",
+    "status": "passed"
+  },
+  {
+    "name": "continuous audio, sentence captions and live speed use the same loaded file",
+    "status": "passed"
+  },
+  {
+    "name": "change lesson saves automatically and opens the lesson picker",
+    "status": "passed"
+  },
+  {
+    "name": "another device restores profiles, notes, speed and cached MP3 from encrypted cloud data",
+    "status": "passed"
+  },
+  {
+    "name": "Text → MP3 synthesizes with pitch/rate, saves history and downloads a real MP3",
+    "status": "passed"
+  },
+  {
+    "name": "conversion history and playback settings synchronize across devices",
+    "status": "passed"
+  },
+  {
+    "name": "MP3 conversion becomes a study lesson; mobile keeps primary action accessible without horizontal overflow",
+    "status": "passed"
+  },
+  {
+    "name": "cloud records contain ciphertext rather than lesson text",
+    "status": "passed"
+  },
+  {
+    "name": "offline edits survive changing lessons and retry successfully",
+    "status": "passed"
+  },
+  {
+    "name": "creating a study lesson cancels an unfinished MP3 conversion without replacing the active lesson",
+    "status": "passed"
+  },
+  {
+    "name": "a malformed sync link reports an error and the app remains usable",
+    "status": "passed"
+  }
+]
