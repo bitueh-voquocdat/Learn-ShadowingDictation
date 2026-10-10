@@ -219,14 +219,30 @@ const translations = new TranslationQueue({
     if (state === "partial") translationRetryAt.set(l.id, Date.now() + 120000);
     if (lesson()?.id !== l.id || appTab !== "study") return;
     if (state === "complete") say("Đã dịch và lưu từng câu cùng bản dịch toàn bài.", "success");
-    else if (state === "partial") say("Bài đã lưu. Dịch tự động chưa đủ; mở Bản dịch toàn bài để thử lại.");
+    else if (state === "partial") say(l.translationData?.error || "Bài đã lưu. Mở Bản dịch toàn bài để thử lại.");
   },
 });
 function startAutoTranslation(l, force = false) {
   if (!l || l.kind === "tts" || !store.lessons.includes(l)) return;
-  if (!force && (navigator.onLine === false || Date.now() < (translationRetryAt.get(l.id) || 0))) return;
+  // A downloaded browser model can translate offline.
+  if (!force && Date.now() < (translationRetryAt.get(l.id) || 0)) return;
   return translations.ensure(l);
 }
+// Warm the model from a real click, before async save/audio work loses user activation.
+// Existing controls are reused; creating a lesson never waits for this download.
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.("button");
+  if (!button || button.disabled) return;
+  const action = button.matches("#create-confirm,#demo,#tts-study,#open-file,#show-full-translation,#retry-translation,#edit-form .primary,[data-lesson]");
+  const current = appTab === "study" ? lesson() : null;
+  const pending = current && current.kind !== "tts" &&
+    (!current.translationData?.paragraph || current.translationData.signature !== translationSignature(current) ||
+     current.sentences.some(s => !hasCurrentTranslation(s)));
+  if (!action && (!pending || translations.browserReady)) return;
+  translations.prepare().then(() => {
+    startAutoTranslation(appTab === "study" ? lesson() : null, true);
+  }).catch(() => { /* The lesson job reports an actionable error without blocking this click. */ });
+}, {capture: true});
 function renderTranslationDialog() {
   const l = lesson();
   if (!l || l.kind === "tts") return;
@@ -237,7 +253,9 @@ function renderTranslationDialog() {
     ? data.paragraph : data?.status === "pending" ? "Đang tạo bản dịch toàn bài…" : "Bản dịch toàn bài chưa sẵn sàng. Nhấn Dịch phần còn thiếu.";
   const done = l.sentences.filter(hasCurrentTranslation).length;
   $("translation-state").textContent = data?.status === "pending"
-    ? `Đang dịch · ${done}/${l.sentences.length} câu`
+    ? translations.downloadProgress !== null
+      ? `Đang tải bộ dịch Anh → Việt · ${translations.downloadProgress}%`
+      : `Đang dịch · ${done}/${l.sentences.length} câu`
     : `${done}/${l.sentences.length} câu đã có bản dịch${current && data?.paragraph ? " · Toàn bài đã lưu" : ""}`;
   $("translation-state").title = data?.error || "";
   $("retry-translation").disabled = translations.jobs.has(l.id);
@@ -1488,7 +1506,7 @@ $("show-full-translation").onclick = () => {
   if (!lesson() || lesson().mode === "dict") return;
   renderTranslationDialog();
   openPanel("translation-dialog");
-  startAutoTranslation(lesson());
+  startAutoTranslation(lesson(), true);
 };
 $("retry-translation").onclick = () => startAutoTranslation(lesson(), true);
 $("change-lesson").onclick = safe(chooseLesson);
