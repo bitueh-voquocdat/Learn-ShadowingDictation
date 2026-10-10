@@ -1,3 +1,4 @@
+import {legacyStorage} from './legacy.mjs';
 const encoder = new TextEncoder(),
   decoder = new TextDecoder();
 export const hex = (bytes) =>
@@ -15,10 +16,8 @@ export function base64(bytes) {
 export const unbase64 = (text) =>
   Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
 export async function workspaceIdentity(storage, url = new URL(location.href)) {
-  if (!storage)
-    try {
-      storage = globalThis.localStorage;
-    } catch {}
+  // Existing identity is read once for migration. New identity lives only in the URL.
+  if (!storage) storage = legacyStorage();
   const incoming = new URLSearchParams(url.hash.slice(1)).get("sync");
   let previous;
   try {
@@ -34,9 +33,6 @@ export async function workspaceIdentity(storage, url = new URL(location.href)) {
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=+$/, "");
-  try {
-    storage?.setItem("shadowlab-private-sync", token);
-  } catch {}
   return {
     token,
     scope: await digest(token),
