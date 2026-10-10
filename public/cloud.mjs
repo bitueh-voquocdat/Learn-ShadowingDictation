@@ -1,6 +1,8 @@
 import { Cipher } from "./crypto-sync.mjs";
 import { validateLesson, parseFile, serializeFile, uid } from "./core.mjs";
 import { toBase64 } from "./audio.mjs";
+import {sanitizeExperience, DEFAULT_EXPERIENCE} from './preferences.mjs';
+export const PREFERENCES_ID = 'workspace-preferences';
 export const timeout = (promise, ms = 30000) =>
   new Promise((resolve, reject) => {
     const t = setTimeout(
@@ -26,6 +28,9 @@ export class CloudSync {
     onStatus = () => {},
     onChange = () => {},
     onConflict = () => {},
+    onPreferences = () => {},
+    initialPreferences = null,
+    legacyLessons = false,
     transportFactory,
   } = {}) {
     Object.assign(this, {
@@ -35,6 +40,7 @@ export class CloudSync {
       onStatus,
       onChange,
       onConflict,
+      onPreferences,
       transportFactory,
     });
     this.cipher = new Cipher(identity.token, identity.scope);
@@ -42,6 +48,10 @@ export class CloudSync {
     this.dirty = new Map();
     this.conflicts = new Map();
     this.busy = false;
+    this.preferences = initialPreferences ? sanitizeExperience(initialPreferences) : null;
+    this.initialized = false;
+    this.startupPreferences = {};
+    this.legacyLessons = legacyLessons ? [...store.lessons] : null;
     this.online = false;
     this.reconciling = Promise.resolve();
     this.queueKey = "shadowlab-pending-" + identity.scope;
@@ -70,9 +80,21 @@ export class CloudSync {
       deleted: !this.store.lessons.some((l) => l.id === id),
     });
     this.persistQueue();
-    this.onStatus("pending", "Đã giữ trên máy · chờ Firebase");
+    this.onStatus("pending", "Đang gửi thay đổi lên Firebase · giữ trang mở");
     clearTimeout(this.timer);
-    this.timer = setTimeout(() => this.flush(), 1100);
+    this.timer = setTimeout(() => this.flush(), 300);
+  }
+  setPreferences(value, changes) {
+    const previous = this.preferences || DEFAULT_EXPERIENCE;
+    this.preferences = sanitizeExperience(value);
+    if (!this.initialized) {
+      for (const key of Object.keys(DEFAULT_EXPERIENCE))
+        if (changes ? Object.hasOwn(changes, key) : previous[key] !== this.preferences[key])
+          this.startupPreferences[key] = this.preferences[key];
+    }
+    this.mark(PREFERENCES_ID);
+    this.dirty.get(PREFERENCES_ID).deleted = false;
+    this.persistQueue();
   }
   async start() {
     if (this.starting) return;
@@ -83,8 +105,45 @@ export class CloudSync {
         (await import("./firebase-adapter.mjs")).createTransport;
       this.transport ||= make(this.identity.scope);
       const rows = await timeout(this.transport.list());
+      // A control may be changed while the initial request is still loading.
+      // Merge only those changed fields into the server preference document.
+      const preferenceRow = rows.find(row => row.id === PREFERENCES_ID);
+      const preferenceQueue = this.dirty.get(PREFERENCES_ID);
+      if (!this.initialized && preferenceRow && preferenceQueue && Object.keys(this.startupPreferences).length) {
+        const {manifest} = await this.receive(preferenceRow);
+        this.preferences = sanitizeExperience({...manifest.preferences, ...this.startupPreferences});
+        this.records.set(PREFERENCES_ID, {...preferenceRow, manifest});
+        preferenceQueue.base = preferenceRow.revision;
+        preferenceQueue.writing = null;
+        this.onPreferences(this.preferences);
+        this.persistQueue();
+      }
+      const received = new Map();
+      if (this.legacyLessons) {
+        for (const l of this.legacyLessons) {
+          const row = rows.find(row => row.id === l.id);
+          if (this.dirty.has(l.id)) continue;
+          if (!row) this.mark(l.id);
+          else if (row.deleted) {
+            if (l.updatedAt > row.updatedAt) this.mark(l.id);
+          } else {
+            const value = await this.receive(row);
+            received.set(l.id, value);
+            // Compare the lesson's edit time, not a later network commit time.
+            if (value.lesson && l.updatedAt >= value.lesson.updatedAt &&
+                JSON.stringify(l) !== JSON.stringify(value.lesson)) this.mark(l.id);
+          }
+        }
+        this.legacyLessons = null;
+      }
+      await this.reconcile(rows, received);
+      this.initialized = true;
+      this.startupPreferences = {};
       this.online = true;
-      await this.reconcile(rows);
+      if (!this.records.has(PREFERENCES_ID) && !this.dirty.has(PREFERENCES_ID)) {
+        this.setPreferences(this.preferences || this.store.lessons.find(l => l.settings.experience)?.settings.experience || DEFAULT_EXPERIENCE);
+        this.onPreferences(this.preferences);
+      }
       for (const l of this.store.lessons)
         if (!this.records.has(l.id) && !this.dirty.has(l.id)) this.mark(l.id);
       this.unsubscribe?.();
@@ -116,7 +175,7 @@ export class CloudSync {
       "error",
       e.code === "permission-denied"
         ? "Firebase chưa cho phép lưu. Kiểm tra firestore.rules."
-        : e.message || "Chưa đồng bộ được Firebase. Bản trên máy vẫn được giữ.",
+        : (e.message || "Chưa đồng bộ được Firebase.") + " Chưa lưu lên server; giữ trang mở hoặc xuất file bài.",
     );
   }
   async writeBlob(owner, key, value) {
@@ -183,6 +242,7 @@ export class CloudSync {
   }
   async receive(record) {
     const manifest = await this.unpack(record);
+    if (record.id === PREFERENCES_ID) return {manifest, lesson: null};
     if (record.deleted) return { manifest, lesson: null };
     let l;
     try {
@@ -196,7 +256,7 @@ export class CloudSync {
     }
     return { manifest, lesson: l };
   }
-  async reconcile(rows) {
+  async reconcile(rows, received = new Map()) {
     for (const row of rows) {
       const known = this.records.get(row.id),
         pending = this.dirty.get(row.id);
@@ -224,9 +284,14 @@ export class CloudSync {
         this.onConflict(row.id);
         continue;
       }
-      const { manifest, lesson } = await this.receive(row);
+      const { manifest, lesson } = received.get(row.id) || await this.receive(row);
       this.records.set(row.id, { ...row, manifest });
       if (pending) continue;
+      if (row.id === PREFERENCES_ID) {
+        this.preferences = sanitizeExperience(manifest.preferences);
+        this.onPreferences(this.preferences);
+        continue;
+      }
       if (!lesson) {
         this.store.lessons = this.store.lessons.filter((l) => l.id !== row.id);
         await this.media.remove(this.identity.scope + ":" + row.id);
@@ -248,12 +313,12 @@ export class CloudSync {
     record.manifest = manifest;
     let cached = await this.media.get(this.identity.scope + ":" + id);
     if (cached?._cloudRevision === record.revision) return cached;
-    const a = { tts: {}, full: {}, recordings: {}, source: null };
+    const a = { tts: {}, full: {}, recordings: cached?.recordings || {}, source: null };
     try {
-      for (const item of manifest.assets || []) {
+      for (const item of (manifest.assets || []).filter(item => item.type !== 'recordings')) {
         const value = await this.readBlob(item.ref);
         if (item.type === "source") a.source = value;
-        else if (["tts", "full", "recordings"].includes(item.type))
+        else if (["tts", "full"].includes(item.type))
           a[item.type][item.key] = value;
       }
     } catch (e) {
@@ -272,16 +337,18 @@ export class CloudSync {
     const safe = parseFile(serializeFile(l, a)).assets;
     safe._cloudRevision = record.revision;
     await this.media.put(this.identity.scope + ":" + id, safe);
+    await this.media.confirmCloud?.(this.identity.scope + ":" + id);
     return safe;
   }
   async flush() {
-    if (this.busy || !this.transport || !this.online) return;
+    if (this.busy || !this.transport || !this.online || !this.initialized) return;
     this.busy = true;
     let activeId;
     try {
-      for (const [id, queued] of [...this.dirty]) {
+      for (const [id, queued] of [...this.dirty].sort(([a], [b]) => Number(b === PREFERENCES_ID) - Number(a === PREFERENCES_ID))) {
         if (this.conflicts.has(id)) continue;
         activeId = id;
+        const preferenceEntry = id === PREFERENCES_ID;
         const l = this.store.lessons.find((l) => l.id === id),
           revision = uid(),
           old = this.records.get(id),
@@ -291,7 +358,7 @@ export class CloudSync {
             .filter(Boolean)
             .map((r) => r.id),
         );
-        const summary = l
+        const summary = preferenceEntry ? {kind: 'preferences'} : l
           ? { title: l.title, kind: l.kind, sentences: l.sentences.length }
           : { title: "deleted" };
         let body = null,
@@ -303,9 +370,9 @@ export class CloudSync {
             JSON.parse(JSON.stringify(l)),
           );
           const a = await this.media.get(this.identity.scope + ":" + id);
-          if (!a || a._partial) refs.push(...(oldManifest?.assets || []));
+          if (!a || a._partial) refs.push(...(oldManifest?.assets || []).filter(item => item.type !== 'recordings'));
           if (a) {
-            for (const type of ["full", "tts", "recordings"])
+            for (const type of ["full", "tts"])
               for (const [key, value] of Object.entries(a[type] || {})) {
                 const v = value.blob
                   ? { ...value, data: await toBase64(value.blob) }
@@ -335,6 +402,7 @@ export class CloudSync {
             oldManifest?.body,
           ].filter(Boolean),
           manifest = {
+            ...(preferenceEntry ? {preferences: {...this.preferences}} : {}),
             body,
             assets: [
               ...new Map(refs.map((r) => [r.type + "|" + r.key, r])).values(),
@@ -356,7 +424,7 @@ export class CloudSync {
           this.transport.commit(id, queued.base, {
             schema: 3,
             revision,
-            deleted: !l,
+            deleted: !l && !preferenceEntry,
             updatedAt: Date.now(),
             payload,
           }),
@@ -366,7 +434,7 @@ export class CloudSync {
           id,
           schema: 3,
           revision,
-          deleted: !l,
+          deleted: !l && !preferenceEntry,
           payload,
           manifest,
         });
@@ -374,6 +442,8 @@ export class CloudSync {
         if (a && !a._partial) {
           a._cloudRevision = revision;
           await this.media.put(this.identity.scope + ":" + id, a);
+          if (this.dirty.get(id)?.sequence === queued.sequence)
+            await this.media.confirmCloud?.(this.identity.scope + ":" + id);
         }
         this.writing = null;
         const current = this.dirty.get(id);
@@ -393,7 +463,7 @@ export class CloudSync {
         this.conflicts.size
           ? "Có xung đột cần chọn phiên bản"
           : this.dirty.size
-            ? "Đã giữ trên máy · chờ Firebase"
+            ? "Chưa gửi xong Firebase · giữ trang mở"
             : "Đã đồng bộ Firebase",
       );
     } catch (e) {
@@ -410,6 +480,10 @@ export class CloudSync {
       }
     } finally {
       this.busy = false;
+      if (this.online && [...this.dirty.keys()].some(id => !this.conflicts.has(id))) {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.flush(), 150);
+      }
     }
   }
   async resolve(id, keepLocal) {
