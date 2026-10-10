@@ -28,7 +28,7 @@ test('auto translates each sentence and whole dialogue, without changing learnin
   await queue.ensure(l); assert.equal(calls.length, 1, 'saved translations are reused');
 });
 
-test('translation and appearance survive export/import and localStorage reload', async () => {
+test('translation and appearance survive export/import and legacy adapter reload', async () => {
   const l = make('Hello! I learn every day.');
   l.settings.experience = {theme:'dark',accent:'#7650cc',gradient:12,sound:false,volume:15,effects:false};
   await new TranslationQueue({fetcher: async (_, request) => response(JSON.parse(request.body).items)}).ensure(l);

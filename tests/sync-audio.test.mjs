@@ -154,17 +154,22 @@ test("one paragraph MP3 has sentence and word boundaries; full file round trip",
     restored = C.parseFile(C.serializeFile(l, { full: { [key]: a } }));
   assert.deepEqual(restored.assets.full[key], a);
 });
-test("private sync link is stable, device-independent and isolated from legacy data", async () => {
+test("private sync link is stable in the URL, device-independent, and never written to localStorage", async () => {
   const s = storage(),
     a = await workspaceIdentity(s, new URL("https://x.test/"));
   assert(a.migrate);
   assert.equal(a.token.length, 43);
-  const b = await workspaceIdentity(s, new URL("https://x.test/"));
+  assert.equal(s.getItem('shadowlab-private-sync'),null);
+  const b = await workspaceIdentity(s, new URL(a.url));
   assert.equal(b.scope, a.scope);
   assert(!b.migrate);
   const c = await workspaceIdentity(storage(), new URL(a.url));
   assert.equal(c.token, a.token);
   assert(!c.migrate);
+  const fresh = await workspaceIdentity(s,new URL('https://x.test/'));
+  assert.notEqual(fresh.scope,a.scope);
+  s.setItem('shadowlab-private-sync',a.token);
+  assert.equal((await workspaceIdentity(s,new URL('https://x.test/'))).scope,a.scope);
   await assert.rejects(
     workspaceIdentity(s, new URL("https://x.test/#sync=broken")),
   );
@@ -219,7 +224,7 @@ test("encrypted Firebase transport round trip retains lesson, notes, progress an
   );
   assert((await b.sync.loadAssets(l.id)).tts[C.audioKey(l, l.sentences[0])]);
 });
-test("offline changes and persisted queue are retried after reopening", async (t) => {
+test("legacy adapter queue retries offline changes after reopening", async (t) => {
   const db = server();
   db.offline = true;
   const local = storage(),

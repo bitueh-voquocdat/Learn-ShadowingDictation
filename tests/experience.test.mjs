@@ -31,7 +31,7 @@ test('theme, color and feedback controls save preferences and keep sound out of 
   }
   globalThis.window={AudioContext:Context,addEventListener(){}};
   const experience=await import('../public/experience.mjs');
-  let saves=0;experience.initExperience(()=>saves++);
+  let saves=0,savedPreferences;experience.initExperience((lesson,prefs)=>{saves++;savedPreferences=prefs;});
   const l=C.createLesson('Experience',C.parseTranscript('One sentence.'));
   experience.syncExperience(l);
   element('theme-toggle').onclick();
@@ -39,7 +39,7 @@ test('theme, color and feedback controls save preferences and keep sound out of 
   assert.equal(element('theme-toggle').getAttribute('aria-pressed'),'true');
   element('appearance-accent').oninput({target:{value:'#7650cc'}});
   assert.equal(l.settings.experience.accent,'#7650cc');assert.equal(element('root').dataset.customAccent,'true');
-  assert.equal(JSON.parse([...storage.values()][0]).accent,'#7650cc');assert(saves>=2);
+  assert.equal(savedPreferences.accent,'#7650cc');assert.equal(storage.size,0);assert(saves>=2);
   assert(await experience.playFeedbackSound('correct'));assert.deepEqual(notes,[659.25,880]);
   notes.length=0;assert(await experience.playFeedbackSound('wrong'));assert.deepEqual(notes,[311.13,261.63]);
   element('model').paused=false;notes.length=0;
@@ -59,4 +59,9 @@ test('theme, color and feedback controls save preferences and keep sound out of 
   assert.equal(imported.settings.experience.sound,false);assert.equal(imported.settings.experience.accent,'#7650cc');
   darkSystem=true;element('appearance-theme').onchange({target:{value:'system'}});
   assert.equal(element('root').dataset.theme,'dark');
+  experience.syncExperience(null);
+  element('feedback-volume').oninput({target:{value:'41'}});
+  assert.equal(savedPreferences.volume,41);assert.equal(storage.size,0);
+  experience.restoreExperience({...savedPreferences,theme:'light',accent:'#118866'});
+  assert.equal(element('root').dataset.theme,'light');assert.equal(element('appearance-accent').value,'#118866');
 });
