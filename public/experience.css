@@ -1,0 +1,291 @@
+/* Color overrides only. Existing sizes, placement and responsive rules stay in style.css. */
+:root { --ink:#16213e; --page-base:#f9fbff; --on-accent:#fff; --green-soft:#e9f8f0; --red-soft:#fff0f3; --amber:#8e692c; --amber-soft:#fff8eb; }
+.primary { color:var(--on-accent); }
+:root[data-theme="dark"] .primary,:root[data-theme="dark"] .play-button { color:var(--on-accent); }
+.range-setting { display:grid; grid-template-columns:1fr auto; gap:10px; margin:18px 0; color:var(--muted); }
+.range-setting input { grid-column:1/-1; width:100%; padding:0; cursor:pointer; }
+.range-setting output { color:var(--blue); font-variant-numeric:tabular-nums; }
+.appearance-grid input[type=color] { width:100%; height:39px; padding:4px 6px; cursor:pointer; }
+.translation-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 18px; }
+.paragraph-translation,.paragraph-original { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.95; }
+.paragraph-translation { color:var(--ink); }
+.paragraph-original { margin-top:14px; color:var(--muted); }
+@keyframes feedback-correct { 0%,100% {filter:none} 35% {filter:drop-shadow(0 0 6px color-mix(in srgb,var(--green) 30%,transparent))} }
+@keyframes feedback-wrong { 0%,100% {filter:none} 35% {filter:drop-shadow(0 0 5px color-mix(in srgb,var(--red) 25%,transparent))} }
+.feedback-correct { animation:feedback-correct .6s ease-out; }
+.feedback-wrong { animation:feedback-wrong .6s ease-out; }
+@keyframes review-arrive { from {opacity:0;transform:translateY(8px)} to {opacity:1;transform:translateY(0)} }
+.review-enter .review-stat { animation:review-arrive .36s both ease-out; }
+.review-enter .review-stat:nth-child(2) {animation-delay:.06s}
+.review-enter .review-stat:nth-child(3) {animation-delay:.12s}
+.review-enter #mistakes,.review-enter #due-list { animation:review-arrive .4s .12s both ease-out; }
+.celebration-layer { position:fixed; inset:0; pointer-events:none; z-index:120; overflow:hidden; }
+.celebration-layer i { position:absolute; top:16%; left:var(--x); width:7px; height:12px; border-radius:2px; background:var(--particle); animation:celebration-fall 1.25s var(--delay) both cubic-bezier(.12,.52,.56,1); }
+@keyframes celebration-fall { 0% {opacity:0;transform:translate(0,-35px) rotate(0)} 15% {opacity:.9} 100% {opacity:0;transform:translate(var(--drift),320px) rotate(var(--spin))} }
+:root[data-effects="false"] .feedback-correct,:root[data-effects="false"] .feedback-wrong,:root[data-effects="false"] .review-enter * {animation:none!important}
+@media(prefers-reduced-motion:reduce) { .feedback-correct,.feedback-wrong,.review-enter *,.celebration-layer i {animation:none!important} }
+
+/* Custom accent */
+:root[data-custom-accent="true"] body {background:radial-gradient(ellipse at 95% 0%,var(--wash-a,var(--accent-soft)) 0,transparent 52%),radial-gradient(ellipse at 5% 100%,var(--wash-b,#f0f8ff) 0,transparent 55%),var(--page-base,var(--surface))}
+:root[data-custom-accent="true"] :focus-visible {outline:3px solid var(--accent-line)}
+:root[data-custom-accent="true"] h1, :root[data-custom-accent="true"] h2, :root[data-custom-accent="true"] h3 {color:var(--blue)}
+:root[data-custom-accent="true"] button:hover:not(:disabled), :root[data-custom-accent="true"] summary:hover {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .primary {box-shadow:0 3px 8px color-mix(in srgb,var(--blue) 8%,transparent)}
+:root[data-custom-accent="true"] .outline {border-color:var(--accent-line)}
+:root[data-custom-accent="true"] input:not([type=checkbox]):not([type=range]):not([type=file]), :root[data-custom-accent="true"] textarea, :root[data-custom-accent="true"] select {border:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] input:focus, :root[data-custom-accent="true"] textarea:focus, :root[data-custom-accent="true"] select:focus {border-color:var(--accent-line)}
+:root[data-custom-accent="true"] .brand strong {color:var(--blue)}
+:root[data-custom-accent="true"] .breadcrumb-mark {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .progress-button strong {color:var(--blue)}
+:root[data-custom-accent="true"] progress {background:var(--accent-soft)}
+:root[data-custom-accent="true"] progress::-webkit-progress-bar {background:var(--accent-soft)}
+:root[data-custom-accent="true"] progress::-webkit-progress-value {background:var(--blue)}
+:root[data-custom-accent="true"] progress::-moz-progress-bar {background:var(--blue)}
+:root[data-custom-accent="true"] .dropdown[open]>summary {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .menu-panel {border:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .steps>button.active {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .practice {box-shadow:0 4px 18px color-mix(in srgb,var(--blue) 2%,transparent)}
+:root[data-custom-accent="true"] .sentence-tools .icon-button {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .speaker-pill {color:var(--blue);border-color:var(--accent-line);background:var(--surface)}
+:root[data-custom-accent="true"] .stage {background:var(--accent-soft);border:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .caption {color:var(--blue)}
+:root[data-custom-accent="true"] .caption button:hover {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .caption button.active {color:var(--blue);background:var(--accent-soft)}
+:root[data-custom-accent="true"] #seek::-webkit-slider-runnable-track {background:linear-gradient(to right,var(--blue) var(--played),var(--accent-soft) var(--played))}
+:root[data-custom-accent="true"] #seek::-webkit-slider-thumb {box-shadow:0 0 0 1px color-mix(in srgb,var(--blue) 19%,transparent)}
+:root[data-custom-accent="true"] #seek::-moz-range-track {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .transport .play {border:1px solid var(--accent-line);box-shadow:0 3px 9px color-mix(in srgb,var(--blue) 10%,transparent)}
+:root[data-custom-accent="true"] .transport .play:hover {background:var(--hover)}
+:root[data-custom-accent="true"] #workspace:is([data-mode=dict], [data-mode=shadow]) .play:not([data-playing=true]) {background:var(--accent-soft);border-color:var(--accent-line)}
+:root[data-custom-accent="true"] #workspace:is([data-mode=dict], [data-mode=shadow]) .play:not([data-playing=true]):hover {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .caption-options input[type=checkbox] {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .exercise-panel {border-top:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] #dict-answer {background:var(--surface);border-color:var(--accent-line)}
+:root[data-custom-accent="true"] #blanks {background:var(--surface);border:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .result {background:var(--surface)}
+:root[data-custom-accent="true"] .result-score {color:var(--blue)}
+:root[data-custom-accent="true"] .result-help {border-top:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .sentence-number {background:var(--accent-soft);border:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .sentence-number.active {border-color:var(--accent-line);background:var(--accent-soft)}
+:root[data-custom-accent="true"] .lesson-card:hover {border-color:var(--accent-line)}
+:root[data-custom-accent="true"] .lesson-card.active {border-color:var(--accent-line);background:var(--surface)}
+:root[data-custom-accent="true"] .card-footer {border-top:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .card-footer>span:first-child {color:var(--blue)}
+:root[data-custom-accent="true"] #welcome {border:1px dashed var(--accent-line)}
+:root[data-custom-accent="true"] .empty-mark {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .review-stat strong {color:var(--blue)}
+:root[data-custom-accent="true"] .mistake-row {border-bottom:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .transcript-row {border-bottom:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .transcript-row.active {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .transcript-row.active span {color:var(--blue)}
+:root[data-custom-accent="true"] .tts-text-label textarea {background:var(--surface)}
+:root[data-custom-accent="true"] .tts-history .lesson-card {border-bottom:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .tts-history .lesson-card.active {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .tts-caption {background:var(--accent-soft)}
+:root[data-custom-accent="true"] .tts-caption .active {background:var(--accent-soft)}
+:root[data-custom-accent="true"] dialog {border:1px solid var(--accent-line);box-shadow:0 20px 80px color-mix(in srgb,var(--blue) 15%,transparent)}
+:root[data-custom-accent="true"] .drawer {box-shadow:-15px 0 60px color-mix(in srgb,var(--blue) 9%,transparent)}
+:root[data-custom-accent="true"] #notes-dialog textarea {background:var(--surface)}
+:root[data-custom-accent="true"] .stat-tile {background:var(--accent-soft);border:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .stat-tile strong {color:var(--blue)}
+:root[data-custom-accent="true"] #sync-link {background:var(--surface)}
+:root[data-custom-accent="true"] #sync-detail {border:1px solid var(--accent-line);background:var(--surface)}
+:root[data-custom-accent="true"] .confirm-symbol {background:var(--accent-soft);color:var(--blue)}
+:root[data-custom-accent="true"] .global-status {border:1px solid var(--accent-line)}
+:root[data-custom-accent="true"] .global-status>.toast-icon {color:var(--blue);background:var(--accent-soft)}
+:root[data-custom-accent="true"] body {background:var(--surface)}
+
+/* Dark palette */
+:root[data-theme="dark"] * {scrollbar-color:var(--line) transparent}
+:root[data-theme="dark"] body {background:radial-gradient(ellipse at 95% 0%,var(--wash-a,var(--accent-soft)) 0,transparent 52%),radial-gradient(ellipse at 5% 100%,var(--wash-b,var(--soft)) 0,transparent 55%),var(--page-base,var(--surface))}
+:root[data-theme="dark"] :focus-visible {outline:3px solid var(--accent-line)}
+:root[data-theme="dark"] h1, :root[data-theme="dark"] h2, :root[data-theme="dark"] h3 {color:var(--blue)}
+:root[data-theme="dark"] button, :root[data-theme="dark"] summary {color:var(--muted)}
+:root[data-theme="dark"] button:hover:not(:disabled), :root[data-theme="dark"] summary:hover {background:var(--accent-soft)}
+:root[data-theme="dark"] .primary {color:var(--on-accent)}
+:root[data-theme="dark"] .outline {background:var(--surface);border-color:var(--accent-line);color:var(--muted)}
+:root[data-theme="dark"] .quiet, :root[data-theme="dark"] .text-button {color:var(--muted)}
+:root[data-theme="dark"] .danger {background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,var(--surface))}
+:root[data-theme="dark"] button.danger:hover:not(:disabled) {background:var(--red-soft)}
+:root[data-theme="dark"] .icon-button {color:var(--muted)}
+:root[data-theme="dark"] .info-button {color:var(--muted)}
+:root[data-theme="dark"] input:not([type=checkbox]):not([type=range]):not([type=file]), :root[data-theme="dark"] textarea, :root[data-theme="dark"] select {color:var(--ink);background:var(--surface);border:1px solid var(--accent-line)}
+:root[data-theme="dark"] input::placeholder, :root[data-theme="dark"] textarea::placeholder {color:var(--muted)}
+:root[data-theme="dark"] input:focus, :root[data-theme="dark"] textarea:focus, :root[data-theme="dark"] select:focus {border-color:var(--accent-line)}
+:root[data-theme="dark"] label {color:var(--muted)}
+:root[data-theme="dark"] .eyebrow, :root[data-theme="dark"] .section-label {color:var(--muted)}
+:root[data-theme="dark"] .topbar {background:color-mix(in srgb,var(--surface) 93%,transparent)}
+:root[data-theme="dark"] .brand strong {color:var(--blue)}
+:root[data-theme="dark"] .brand small {color:var(--muted)}
+:root[data-theme="dark"] .app-tabs button {color:var(--muted)}
+:root[data-theme="dark"] .sync-pill {color:var(--muted)}
+:root[data-theme="dark"] .sync-pill .icon {color:var(--muted)}
+:root[data-theme="dark"] .sync-pill[data-state=synced] .icon {color:var(--green)}
+:root[data-theme="dark"] .sync-pill[data-state=error] .icon, :root[data-theme="dark"] .sync-pill[data-state=offline] .icon {color:var(--amber)}
+:root[data-theme="dark"] .breadcrumb {color:var(--muted)}
+:root[data-theme="dark"] .breadcrumb>.icon {color:var(--muted)}
+:root[data-theme="dark"] .breadcrumb-mark {background:var(--accent-soft)}
+:root[data-theme="dark"] .lesson-heading p {color:var(--muted)}
+:root[data-theme="dark"] .meta-item .icon {color:var(--muted)}
+:root[data-theme="dark"] .mode-dropdown>summary {color:var(--muted)}
+:root[data-theme="dark"] .mode-dropdown>summary>.icon:last-child {color:var(--muted)}
+:root[data-theme="dark"] .progress-button {color:var(--muted)}
+:root[data-theme="dark"] .progress-button strong {color:var(--blue)}
+:root[data-theme="dark"] progress {background:var(--accent-soft)}
+:root[data-theme="dark"] progress::-webkit-progress-bar {background:var(--accent-soft)}
+:root[data-theme="dark"] progress::-webkit-progress-value {background:var(--blue)}
+:root[data-theme="dark"] progress::-moz-progress-bar {background:var(--blue)}
+:root[data-theme="dark"] .dropdown[open]>summary {background:var(--accent-soft)}
+:root[data-theme="dark"] .menu-panel {background:var(--surface);border:1px solid var(--accent-line)}
+:root[data-theme="dark"] .menu-panel>button {color:var(--muted)}
+:root[data-theme="dark"] .steps>button small {color:var(--muted)}
+:root[data-theme="dark"] .steps>button.active {background:var(--accent-soft)}
+:root[data-theme="dark"] .menu-panel>small {color:var(--muted)}
+:root[data-theme="dark"] .info-panel p {color:var(--muted)}
+:root[data-theme="dark"] .practice {background:var(--surface)}
+:root[data-theme="dark"] #sentence-position {color:var(--ink)}
+:root[data-theme="dark"] .sentence-tools .icon-button {background:var(--accent-soft)}
+:root[data-theme="dark"] .speaker-pill {color:var(--blue);border-color:var(--accent-line);background:var(--surface)}
+:root[data-theme="dark"] .speaker-pill>.icon:last-child {color:var(--muted)}
+:root[data-theme="dark"] #star {color:var(--muted)}
+:root[data-theme="dark"] #star[aria-pressed=true] {color:var(--amber)}
+:root[data-theme="dark"] .stage {background:var(--accent-soft);border:1px solid var(--accent-line)}
+:root[data-theme="dark"] .caption {color:var(--blue)}
+:root[data-theme="dark"] .caption button:hover {background:var(--accent-soft)}
+:root[data-theme="dark"] .caption button.active {color:var(--blue);background:var(--accent-soft)}
+:root[data-theme="dark"] .translation {color:var(--muted)}
+:root[data-theme="dark"] #caption-hidden {color:var(--muted)}
+:root[data-theme="dark"] .stage.has-video .translation, :root[data-theme="dark"] .stage.has-video #caption-hidden {color:var(--muted)}
+:root[data-theme="dark"] .timeline {color:var(--muted)}
+:root[data-theme="dark"] #seek::-webkit-slider-runnable-track {background:linear-gradient(to right,var(--blue) var(--played),var(--accent-soft) var(--played))}
+:root[data-theme="dark"] #seek::-moz-range-track {background:var(--accent-soft)}
+:root[data-theme="dark"] .transport-left select {color:var(--muted)}
+:root[data-theme="dark"] .transport .play {border:1px solid var(--accent-line)}
+:root[data-theme="dark"] .transport .play:hover {background:var(--hover)}
+:root[data-theme="dark"] #workspace:is([data-mode=dict], [data-mode=shadow]) .play:not([data-playing=true]) {background:var(--accent-soft);border-color:var(--accent-line)}
+:root[data-theme="dark"] #workspace:is([data-mode=dict], [data-mode=shadow]) .play:not([data-playing=true]):hover {background:var(--accent-soft)}
+:root[data-theme="dark"] .transport-main .icon-button {color:var(--muted)}
+:root[data-theme="dark"] .caption-options>label {color:var(--muted)}
+:root[data-theme="dark"] .caption-options input[type=checkbox] {background:var(--accent-soft)}
+:root[data-theme="dark"] .caption-options input[type=checkbox]:before {background:var(--surface)}
+:root[data-theme="dark"] #audio-status {color:var(--muted)}
+:root[data-theme="dark"] .player-tools .icon-button {color:var(--muted)}
+:root[data-theme="dark"] .exercise-panel {border-top:1px solid var(--accent-line)}
+:root[data-theme="dark"] .pane-heading h2 {color:var(--muted)}
+:root[data-theme="dark"] .pane-heading h2 .icon {color:var(--muted)}
+:root[data-theme="dark"] .mode-caption {color:var(--muted)}
+:root[data-theme="dark"] #dict-answer {background:var(--surface);border-color:var(--accent-line)}
+:root[data-theme="dark"] #blanks {color:var(--ink);background:var(--surface);border:1px solid var(--accent-line)}
+:root[data-theme="dark"] #blanks input.correct {border-color:color-mix(in srgb,var(--green) 40%,var(--surface));background:var(--green-soft)}
+:root[data-theme="dark"] #blanks input.wrong {border-color:color-mix(in srgb,var(--red) 40%,var(--surface));background:var(--soft)}
+:root[data-theme="dark"] .hint {background:var(--amber-soft);color:var(--amber);border:1px solid var(--line)}
+:root[data-theme="dark"] #dict-stats {color:var(--muted)}
+:root[data-theme="dark"] .result {border:1px solid var(--line);background:var(--surface)}
+:root[data-theme="dark"] .result-top {color:var(--muted)}
+:root[data-theme="dark"] .result-top small {color:var(--muted)}
+:root[data-theme="dark"] .result-score {color:var(--blue)}
+:root[data-theme="dark"] .result-tokens button.correct {color:var(--green);background:var(--green-soft)}
+:root[data-theme="dark"] .result-tokens button.wrong {color:var(--red);background:var(--red-soft)}
+:root[data-theme="dark"] .result-tokens button.missing {color:var(--red);background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,var(--surface))}
+:root[data-theme="dark"] .result-tokens button.extra {color:var(--purple,#c6aff4);background:var(--purple-soft,#302844)}
+:root[data-theme="dark"] .result-tokens button.moved, :root[data-theme="dark"] .result-tokens button.moved-extra {color:var(--amber);background:var(--amber-soft)}
+:root[data-theme="dark"] .result-legend {color:var(--muted)}
+:root[data-theme="dark"] .result-help {border-top:1px solid var(--accent-line)}
+:root[data-theme="dark"] .result-help summary {color:var(--muted)}
+:root[data-theme="dark"] .record-state {color:var(--muted)}
+:root[data-theme="dark"] .record-state[data-recording=true] {color:var(--red)}
+:root[data-theme="dark"] .record-state[data-recording=true]:before {background:var(--red-soft)}
+:root[data-theme="dark"] #record-playback>label {color:var(--muted)}
+:root[data-theme="dark"] .record-compare>summary {color:var(--muted)}
+:root[data-theme="dark"] .comparison-details>summary {color:var(--muted)}
+:root[data-theme="dark"] .transcript-note {color:var(--amber)}
+:root[data-theme="dark"] #recognition-original p {color:var(--muted)}
+:root[data-theme="dark"] #speech-result[data-stale=true] .result-score:after {color:var(--amber)}
+:root[data-theme="dark"] .shadow-result-actions #record {color:var(--muted)}
+:root[data-theme="dark"] .sentence-strip {background:var(--surface)}
+:root[data-theme="dark"] .sentence-strip>.quiet {color:var(--muted)}
+:root[data-theme="dark"] .sentence-number {background:var(--accent-soft);color:var(--muted);border:1px solid var(--accent-line)}
+:root[data-theme="dark"] .sentence-number.active {border-color:var(--accent-line);background:var(--accent-soft)}
+:root[data-theme="dark"] .sentence-number.completed {color:var(--green);background:var(--green-soft)}
+:root[data-theme="dark"] .sentence-number .number-state {background:var(--surface)}
+:root[data-theme="dark"] .sentence-gap {color:var(--muted)}
+:root[data-theme="dark"] .picker-heading p {color:var(--muted)}
+:root[data-theme="dark"] .search-label .icon {color:var(--muted)}
+:root[data-theme="dark"] .search-label>input {background:var(--surface)!important}
+:root[data-theme="dark"] .lesson-card {background:var(--surface)}
+:root[data-theme="dark"] .lesson-card:hover {background:var(--surface)!important;border-color:var(--accent-line)}
+:root[data-theme="dark"] .lesson-card strong {color:var(--ink)}
+:root[data-theme="dark"] .lesson-card small {color:var(--muted)}
+:root[data-theme="dark"] .lesson-card.active {border-color:var(--accent-line);background:var(--surface)}
+:root[data-theme="dark"] .card-footer {color:var(--muted);border-top:1px solid var(--accent-line)}
+:root[data-theme="dark"] .card-footer>span:first-child {color:var(--blue)}
+:root[data-theme="dark"] #welcome {border:1px dashed var(--accent-line);background:color-mix(in srgb,var(--surface) 57%,transparent)}
+:root[data-theme="dark"] #welcome p {color:var(--muted)}
+:root[data-theme="dark"] #welcome small {color:var(--muted)}
+:root[data-theme="dark"] .empty-mark {background:var(--accent-soft)}
+:root[data-theme="dark"] .review {background:var(--surface)}
+:root[data-theme="dark"] .review-stat strong {color:var(--blue)}
+:root[data-theme="dark"] .review-stat small {color:var(--muted)}
+:root[data-theme="dark"] .small-heading {color:var(--muted)}
+:root[data-theme="dark"] .mistake-row {border-bottom:1px solid var(--accent-line)}
+:root[data-theme="dark"] .mistake-row strong {color:var(--ink)}
+:root[data-theme="dark"] .mistake-row p {color:var(--muted)}
+:root[data-theme="dark"] .transcript-row {border-bottom:1px solid var(--accent-line)}
+:root[data-theme="dark"] .transcript-row small {color:var(--muted)}
+:root[data-theme="dark"] .transcript-row span {color:var(--muted)}
+:root[data-theme="dark"] .transcript-row.active {background:var(--accent-soft)}
+:root[data-theme="dark"] .transcript-row.active span {color:var(--blue)}
+:root[data-theme="dark"] .sentence-status {color:var(--green)}
+:root[data-theme="dark"] .tts-editor, :root[data-theme="dark"] .tts-history {background:var(--surface)}
+:root[data-theme="dark"] .tts-text-label textarea {background:var(--surface)}
+:root[data-theme="dark"] #tts-status {color:var(--muted)}
+:root[data-theme="dark"] .tts-history .lesson-card {border-bottom:1px solid var(--accent-line)}
+:root[data-theme="dark"] .tts-history .lesson-card.active {background:var(--accent-soft)}
+:root[data-theme="dark"] .tts-caption {color:var(--muted);background:var(--accent-soft)}
+:root[data-theme="dark"] .tts-caption .active {background:var(--accent-soft)}
+:root[data-theme="dark"] dialog {border:1px solid var(--accent-line);background:var(--surface);color:var(--muted)}
+:root[data-theme="dark"] .dialog-heading .icon-button {color:var(--muted)}
+:root[data-theme="dark"] dialog p {color:var(--muted)}
+:root[data-theme="dark"] dialog label {color:var(--muted)}
+:root[data-theme="dark"] .error-text {color:var(--red)!important;background:var(--red-soft)}
+:root[data-theme="dark"] .settings-grid #source-name {color:var(--muted)}
+:root[data-theme="dark"] .reader-row strong {color:var(--muted)}
+:root[data-theme="dark"] .reader-row small {color:var(--muted)}
+:root[data-theme="dark"] .reader-row label {color:var(--muted)}
+:root[data-theme="dark"] .help-note {color:var(--muted)}
+:root[data-theme="dark"] .help-note summary {color:var(--muted)}
+:root[data-theme="dark"] .help-note p {color:var(--muted)}
+:root[data-theme="dark"] .drawer .dialog-heading {background:var(--surface)}
+:root[data-theme="dark"] #notes-dialog textarea {background:var(--surface)}
+:root[data-theme="dark"] .stat-tile {background:var(--accent-soft);border:1px solid var(--accent-line)}
+:root[data-theme="dark"] .stat-tile strong {color:var(--blue)}
+:root[data-theme="dark"] .stat-tile small {color:var(--muted)}
+:root[data-theme="dark"] #help-dialog ol {color:var(--muted)}
+:root[data-theme="dark"] #help-dialog li strong {color:var(--muted)}
+:root[data-theme="dark"] #sync-link {background:var(--surface)}
+:root[data-theme="dark"] #sync-detail {color:var(--muted);border:1px solid var(--accent-line);background:var(--surface)}
+:root[data-theme="dark"] .confirm-symbol {background:var(--accent-soft);color:var(--blue)}
+:root[data-theme="dark"] .confirm-symbol.danger {background:var(--red-soft);color:var(--red)}
+:root[data-theme="dark"] .preview-row>div>span {color:var(--muted)}
+:root[data-theme="dark"] .preview-row>div>span:first-child {color:var(--muted)}
+:root[data-theme="dark"] .preview-row>span {color:var(--muted)}
+:root[data-theme="dark"] .preview-tools small {color:var(--muted)}
+:root[data-theme="dark"] .preview-summary {color:var(--muted)}
+:root[data-theme="dark"] .global-status {background:var(--surface);border:1px solid var(--accent-line);color:var(--muted)}
+:root[data-theme="dark"] .global-status>.toast-icon {color:var(--blue);background:var(--accent-soft)}
+:root[data-theme="dark"] .global-status.error {border-color:color-mix(in srgb,var(--red) 40%,var(--surface))}
+:root[data-theme="dark"] .global-status.error>.toast-icon {color:var(--red);background:var(--red-soft)}
+:root[data-theme="dark"] .global-status.success>.toast-icon {color:var(--green);background:var(--green-soft)}
+:root[data-theme="dark"] .toast-close {color:var(--muted)}
+:root[data-theme="dark"] body {background:var(--surface)}
+:root[data-theme="dark"] .transport .play,:root[data-custom-accent="true"] .transport .play {color:var(--on-accent)}
+body,:root[data-theme="dark"] body,:root[data-custom-accent="true"] body {
+  background:radial-gradient(ellipse at 95% 0%,var(--wash-a,#eaf0ff) 0,transparent 52%),radial-gradient(ellipse at 5% 100%,var(--wash-b,#f0f8ff) 0,transparent 55%),var(--page-base,#f9fbff);
+  background-attachment:fixed;
+}
+.mobile-theme-toggle {display:none!important}
+@media(max-width:600px) { #theme-toggle {width:29px;height:29px;min-height:29px;padding:5px} }
+@media(max-width:360px) {
+  .top-actions #theme-toggle {display:none}
+  .mobile-theme-toggle {display:flex!important}
+}
