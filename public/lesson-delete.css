@@ -1,0 +1,20 @@
+/* Only the new lesson-card wrapper and delete button are affected. */
+.lesson-card-entry {position:relative;min-width:0;}
+.lesson-card-entry > .lesson-card {height:100%;}
+.lesson-card-entry > .lesson-card strong {padding-right:38px;}
+.lesson-card-entry > .lesson-card-delete {
+  position:absolute;top:15px;right:12px;z-index:1;
+  width:36px;height:36px;min-height:36px;padding:8px;
+  background:transparent;border-color:transparent;
+  color:var(--muted,#62769f);
+}
+.lesson-card-entry > .lesson-card-delete:hover:not(:disabled) {
+  background:var(--red-soft,#fff1f3);color:var(--red,#be123c);
+}
+.lesson-card-entry > .lesson-card-delete:focus-visible {
+  outline:2px solid var(--red,#be123c);outline-offset:2px;
+}
+@media (pointer:coarse) {
+  .lesson-card-entry > .lesson-card-delete {width:44px;height:44px;min-height:44px;padding:12px;top:11px;right:8px;}
+  .lesson-card-entry > .lesson-card strong {padding-right:42px;}
+}
