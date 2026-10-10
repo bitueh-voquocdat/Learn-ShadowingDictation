@@ -225,8 +225,8 @@
         ><button id="retry-sync" class="outline">Đồng bộ ngay</button>
       </div>
       <p class="subtle">
-        Bài và audio được mã hóa trước khi gửi lên Firestore. Khi mất mạng, thay
-        đổi được giữ trên máy và gửi lại khi có kết nối.
+        Bài, cài đặt và audio mẫu được mã hóa trước khi gửi lên Firestore. Khi
+        mất mạng, giữ trang mở để gửi lại hoặc xuất file trước khi đóng.
       </p>
     </dialog>
     <dialog id="conflict-dialog">
@@ -435,8 +435,8 @@
       <p>
         Tiến độ, giọng đọc, ghi chú và lịch sử MP3 tự lưu vào Firebase. Dùng
         liên kết đồng bộ riêng để mở cùng dữ liệu trên máy khác, không cần tài
-        khoản. Audio được giữ trên máy để mở nhanh; file .shadow.json vẫn dùng
-        được để sao lưu và chuyển bài chủ động.
+        khoản. Bản ghi âm chỉ lưu trên thiết bị, thay khi ghi lại cùng vị trí
+        và xóa sau 30 ngày khi mở app. File .shadow.json dùng để sao lưu.
       </p>
       <p class="subtle">
         Bấm từ khi dùng audio gốc sẽ nghe cả câu vì phụ đề chỉ cung cấp mốc câu;
