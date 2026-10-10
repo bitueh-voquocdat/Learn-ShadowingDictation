@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Poppins loads locally with the production CSP",
+    "status": "passed"
+  },
+  {
+    "name": "all learning stages share one centered vertical workspace",
+    "status": "passed"
+  },
+  {
+    "name": "controls and dialog labels have unique IDs",
+    "status": "passed"
+  },
+  {
+    "name": "progress reflects actual Dictation and Shadowing mastery, not the cursor",
+    "status": "passed"
+  },
+  {
+    "name": "shadowing results open with a real score, collapsible word feedback, retry and next actions",
+    "status": "passed"
+  },
+  {
+    "name": "editing a transcript labels the previous result without silently recalculating it",
+    "status": "passed"
+  },
+  {
+    "name": "shadowing starts with concise actions; editable transcript stays accessible in a disclosure",
+    "status": "passed"
+  },
+  {
+    "name": "the current learning action has visual priority over create and idle playback controls",
+    "status": "passed"
+  },
+  {
+    "name": "stage menu supports keyboard opening, Escape and focus return",
+    "status": "passed"
+  },
+  {
+    "name": "display options work, only one menu opens, and outside clicks dismiss it",
+    "status": "passed"
+  },
+  {
+    "name": "unified Play/Pause resumes the same audio; notes and voice panels preserve playback and drafts",
+    "status": "passed"
+  },
+  {
+    "name": "sentence buttons show real completion; list and statistics open without stacking panels",
+    "status": "passed"
+  },
+  {
+    "name": "dictation hides answers in captions and sentence list; feedback and hints remain inline",
+    "status": "passed"
+  },
+  {
+    "name": "strict grading remains reachable from its options menu",
+    "status": "passed"
+  },
+  {
+    "name": "sentence menu edits and saves the original sentence fields",
+    "status": "passed"
+  },
+  {
+    "name": "styled deletion confirmation cancels safely with a button or Escape",
+    "status": "passed"
+  },
+  {
+    "name": "dismissing an unfinished lesson confirms discard and cancellation keeps form input",
+    "status": "passed"
+  },
+  {
+    "name": "close buttons and Escape protect unsaved sentence edits without modifying saved data",
+    "status": "passed"
+  },
+  {
+    "name": "notifications appear in a corner and can be dismissed without moving the learning layout",
+    "status": "passed"
+  },
+  {
+    "name": "file menu exports the existing format with notes and real progress",
+    "status": "passed"
+  },
+  {
+    "name": "all stages and menus remain reachable on 320–1365px screens without horizontal overflow",
+    "status": "passed"
+  },
+  {
+    "name": "review sentence navigation returns to the real dictation activity",
+    "status": "passed"
+  },
+  {
+    "name": "library navigation, search and return preserve saved lesson data",
+    "status": "passed"
+  },
+  {
+    "name": "styled import confirmation restores an existing lesson without changing the portable format",
+    "status": "passed"
+  },
+  {
+    "name": "long titles and lessons wrap safely; drawer jump reaches the final sentence",
+    "status": "passed"
+  },
+  {
+    "name": "accepting the styled confirmation deletes only the chosen lesson",
+    "status": "passed"
+  },
+  {
+    "name": "MP3 history uses the same styled confirmation and keeps its conversion controls",
+    "status": "passed"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "voice": "en-GB-SoniaNeural",
+    "rate": -10,
+    "pitch": 5,
+    "bytes": 24480,
+    "words": 10,
+    "duration": 4.08,
+    "status": "passed"
+  },
+  {
+    "voice": "en-GB-RyanNeural",
+    "rate": -10,
+    "pitch": 5,
+    "bytes": 29232,
+    "words": 10,
+    "duration": 4.872,
+    "status": "passed"
+  },
+  {
+    "voice": "en-GB-LibbyNeural",
+    "rate": -10,
+    "pitch": 5,
+    "bytes": 30528,
+    "words": 10,
+    "duration": 5.088,
+    "status": "passed"
+  },
+  {
+    "voice": "en-GB-ThomasNeural",
+    "rate": -10,
+    "pitch": 5,
+    "bytes": 28656,
+    "words": 10,
+    "duration": 4.776,
+    "status": "passed"
+  }
+]
