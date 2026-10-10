@@ -1,15 +1,16 @@
 import {DEFAULT_EXPERIENCE, sanitizeExperience, palette} from './preferences.mjs';
 import {icon, openPanel, notify} from './presentation.mjs';
 
-const KEY = 'shadowlab-experience-v1';
 const $ = id => document.getElementById(id);
 let prefs = {...DEFAULT_EXPERIENCE}, audio = null, activeLesson = null;
 let onChange = () => {}, previousMode = '', previousLesson = '', effectTimer;
 const celebrated = new Set();
 
-try { prefs = sanitizeExperience(JSON.parse(localStorage.getItem(KEY) || '{}')); } catch {}
-
 export function experiencePreferences() { return {...prefs}; }
+export function restoreExperience(value) {
+  prefs = sanitizeExperience(value); apply(); syncForm();
+  if (!prefs.effects) clearEffects();
+}
 export function effectiveDark(value = prefs) {
   return value.theme === 'dark' || value.theme === 'system' && matchMedia('(prefers-color-scheme:dark)').matches;
 }
@@ -44,10 +45,9 @@ function syncForm() {
 }
 function save(value) {
   prefs = sanitizeExperience({...prefs, ...value});
-  try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {}
   apply(); syncForm();
   if (activeLesson) activeLesson.settings.experience = experiencePreferences();
-  onChange(activeLesson);
+  onChange(activeLesson, experiencePreferences(), value);
   if (!prefs.effects) clearEffects();
 }
 async function unlock() {
@@ -134,14 +134,7 @@ export function syncExperience(lesson) {
     previousLesson = lesson?.id || ''; previousMode = '';
     if (activeLesson?.sentences.every(s => activeLesson.progress[s.id].completed)) celebrated.add(activeLesson.id);
   }
-  if (activeLesson?.settings.experience) {
-    const next = sanitizeExperience(activeLesson.settings.experience);
-    if (JSON.stringify(next) !== JSON.stringify(prefs)) {
-      prefs = next;
-      try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {}
-      apply(); syncForm();
-    }
-  }
+  // Appearance is a workspace preference, loaded from Firebase even without an open lesson.
   if (activeLesson?.mode === 'review' && previousMode !== 'review') {
     const id = activeLesson.id;
     requestAnimationFrame(() => {
@@ -170,10 +163,6 @@ export function initExperience(changed) {
   $('reset-appearance').onclick = () => save(DEFAULT_EXPERIENCE);
   const scheme = matchMedia('(prefers-color-scheme:dark)');
   scheme.addEventListener?.('change', () => { if (prefs.theme === 'system') apply(); });
-  window.addEventListener('storage', event => {
-    if (event.key !== KEY) return;
-    try { prefs = sanitizeExperience(JSON.parse(event.newValue || '{}')); apply(); syncForm(); } catch {}
-  });
   document.addEventListener('pointerdown', unlock, {passive: true});
   document.addEventListener('keydown', unlock, {passive: true});
   document.addEventListener('visibilitychange', () => {
