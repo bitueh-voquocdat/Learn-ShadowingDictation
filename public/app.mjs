@@ -11,11 +11,12 @@ import {
 import { Capture } from "./capture.mjs";
 import { workspaceIdentity } from "./crypto-sync.mjs";
 import { MediaStore } from "./media-store.mjs";
-import { CloudSync } from "./cloud.mjs";
+import { CloudSync, PREFERENCES_ID } from "./cloud.mjs";
+import {readLegacy, clearLegacy} from './legacy.mjs';
 import { Converter } from "./converter.mjs";
 import { notify, confirmAction, openPanel, initPresentation, renderLessonUI, syncPlayback, icon, noteRecognition, resetRecognitionView } from "./presentation.mjs";
 import { TranslationQueue, paragraphText, translationSignature, hasCurrentTranslation } from "./translation.mjs";
-import { initExperience, syncExperience, experiencePreferences, learningFeedback } from "./experience.mjs";
+import { initExperience, syncExperience, experiencePreferences, restoreExperience, learningFeedback } from "./experience.mjs";
 const $ = (id) => document.getElementById(id);
 const esc = (s) =>
   String(s).replace(
@@ -36,13 +37,13 @@ try {
   identity = await workspaceIdentity(undefined, clean);
 }
 history.replaceState(null, "", identity.url);
-const store = new LessonStore(
-    undefined,
-    "shadowlab-library-" + identity.scope,
-    identity.migrate,
-  ).load(),
+const legacy = readLegacy(identity);
+const store = new LessonStore().load(),
   assetLibrary = new Map(),
   media = new MediaStore();
+store.lessons = legacy.lessons;
+store.storage.setItem('shadowlab-pending-' + identity.scope, JSON.stringify(legacy.pending));
+if (legacy.preferences) restoreExperience(legacy.preferences);
 store.current = null;
 let appTab = "study",
   preloadController = null,
@@ -79,6 +80,9 @@ const sync = new CloudSync({
   identity,
   store,
   media,
+  legacyLessons: legacy.lessons.length > 0,
+  initialPreferences: legacy.preferences,
+  onPreferences: value => restoreExperience(value),
   onStatus: (state, text) => {
     $("save-state").textContent = state === "synced"
       ? text.includes("xung đột") ? "Cần chọn phiên bản" : "Đã đồng bộ"
@@ -86,6 +90,7 @@ const sync = new CloudSync({
     $("sync-settings").dataset.state = state;
     $("sync-settings").title = text + " · Đồng bộ và liên kết riêng";
     $("sync-detail").textContent = text;
+    if (state === 'synced' && !sync.dirty.size && !sync.conflicts.size) clearLegacy(legacy);
   },
   onChange: (id) => {
     renderLibrary();
@@ -105,7 +110,8 @@ const sync = new CloudSync({
   onConflict: (id) => {
     conflictId = id;
     $("conflict-detail").textContent =
-      "Bài: " + (store.lessons.find((l) => l.id === id)?.title || "Bài đã xóa");
+      id === PREFERENCES_ID ? 'Cài đặt giao diện đã thay đổi trên thiết bị khác.'
+        : "Bài: " + (store.lessons.find((l) => l.id === id)?.title || "Bài đã xóa");
     if (!$("conflict-dialog").open) $("conflict-dialog").showModal();
   },
 });
@@ -121,7 +127,9 @@ let preview = [],
   flowKind = "",
   hintTarget = 0,
   creating = false,
-  activeJob = null;
+  activeJob = null,
+  savingCount = 0,
+  recordingStorageWarned = false;
 function tracked(fn) {
   const p = fn();
   activeJob = p;
@@ -169,28 +177,32 @@ function persist(immediate = false, id = store.current) {
   clearTimeout(saveTimers.get(id));
   saveTimers.delete(id);
   const save = async () => {
-    const signature = id ? snapshot(id) : null,
-      changed = id && savedSnapshots.get(id) !== signature;
-    if (changed) {
-      const l = store.lessons.find((l) => l.id === id);
-      if (l) l.updatedAt = Date.now();
-    }
+    savingCount++;
     try {
-      store.save();
-    } catch (e) {
-      say(e.message, "error");
-    }
-    if (id && changed) {
+      const signature = id ? snapshot(id) : null,
+        changed = id && savedSnapshots.get(id) !== signature;
+      if (changed) {
+        const l = store.lessons.find((l) => l.id === id);
+        if (l) l.updatedAt = Date.now();
+      }
       try {
-        if (assetLibrary.has(id))
-          await media.put(identity.scope + ":" + id, assets(id));
-        sync.mark(id);
-        savedSnapshots.set(id, signature);
+        store.save();
       } catch (e) {
         say(e.message, "error");
-        sync.mark(id);
       }
-    }
+      if (id && changed) {
+        try {
+          if (assetLibrary.has(id))
+            await media.put(identity.scope + ":" + id, assets(id));
+          sync.mark(id);
+          savedSnapshots.set(id, signature);
+        } catch (e) {
+          say(e.message, "error");
+          sync.mark(id);
+        }
+        if (immediate) void sync.flush();
+      }
+    } finally { savingCount--; }
   };
   if (immediate) return save();
   else saveTimers.set(id, setTimeout(() => { saveTimers.delete(id); save(); }, 200));
@@ -218,8 +230,8 @@ const translations = new TranslationQueue({
   status: (l, state) => {
     if (state === "partial") translationRetryAt.set(l.id, Date.now() + 120000);
     if (lesson()?.id !== l.id || appTab !== "study") return;
-    if (state === "complete") say("Đã dịch và lưu từng câu cùng bản dịch toàn bài.", "success");
-    else if (state === "partial") say(l.translationData?.error || "Bài đã lưu. Mở Bản dịch toàn bài để thử lại.");
+    if (state === "complete") say("Đã dịch từng câu và toàn bài. Theo dõi trạng thái đồng bộ Firebase.", "success");
+    else if (state === "partial") say(l.translationData?.error || "Bài vẫn được giữ. Mở Bản dịch toàn bài để thử lại.");
   },
 });
 function startAutoTranslation(l, force = false) {
@@ -856,6 +868,10 @@ async function keepRecording(data, grade = true) {
   const l = store.lessons.find((x) => x.id === owner.lessonId),
     s = l?.sentences.find((x) => x.id === owner.sentenceId);
   if (!l || !s) return;
+  if (data.blob?.size && !recordingStorageWarned && !(await media.ready)) {
+    recordingStorageWarned = true;
+    say('Trình duyệt chặn lưu bản ghi âm. Bản ghi chỉ giữ khi trang đang mở; xuất file bài để giữ lại.', 'error');
+  }
   const a = assets(l.id);
   if (owner.continuous) {
     detachRecording(l, a, s.id);
@@ -863,6 +879,7 @@ async function keepRecording(data, grade = true) {
       a.recordings[s.id] = {
         data: await toBase64(data.blob),
         mime: data.blob.type,
+        createdAt: Date.now(),
       };
     const ids = owner.continuous,
       reference = ids
@@ -920,6 +937,7 @@ async function keepRecording(data, grade = true) {
     a.recordings[s.id] = {
       data: await toBase64(data.blob),
       mime: data.blob.type,
+      createdAt: Date.now(),
     };
   l.progress[s.id].shadow.transcript = data.text || "";
   l.updatedAt = Date.now();
@@ -1285,6 +1303,7 @@ async function exportFile() {
         data.recordings[key] = {
           data: rec.data || (await toBase64(rec.blob)),
           mime: rec.mime,
+          createdAt: rec.createdAt,
         };
       if (a.source)
         data.source = {
@@ -1479,8 +1498,8 @@ async function saveSentence(event) {
     render();
     startAutoTranslation(l, true);
     if (textChanged) say(l.settings.source === "original"
-      ? "Đã lưu câu. Kiểm tra lại mốc audio gốc để phụ đề khớp nội dung mới."
-      : "Đã lưu câu. Audio sẽ được tạo lại khi nghe; có thể chọn Chuẩn bị audio.", "success");
+      ? "Đã cập nhật câu và gửi đồng bộ. Kiểm tra lại mốc audio gốc để phụ đề khớp nội dung mới."
+      : "Đã cập nhật câu và gửi đồng bộ. Audio sẽ được tạo lại khi nghe; có thể chọn Chuẩn bị audio.", "success");
   } catch (e) {
     $("edit-error").textContent = e.message;
   }
@@ -1944,13 +1963,31 @@ document.addEventListener("keydown", (e) => {
     safe(() => tracked(playSentence))();
   }
 });
-window.addEventListener("beforeunload", () => {
+window.addEventListener("beforeunload", event => {
+  for (const [id, timer] of saveTimers) {
+    clearTimeout(timer); sync.mark(id);
+  }
+  saveTimers.clear();
   persist(true);
+  if (savingCount || sync.dirty.size || sync.conflicts.size || capture.active) {
+    event.preventDefault(); event.returnValue = '';
+  }
   engine.destroy();
   capture.cleanup();
 });
 initPresentation();
-initExperience((l) => { if (l) persist(); });
+initExperience((l, preferences, changes) => {
+  sync.setPreferences(preferences, changes);
+  if (l) persist();
+});
+const pruneLocalRecordings = () => media.pruneExpired().then(() => {
+  if (lesson() && appTab === 'study') renderRecording();
+});
+void pruneLocalRecordings();
+setInterval(pruneLocalRecordings, 60 * 60 * 1000);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') void pruneLocalRecordings();
+});
 function updatePlaybackUI() {
   syncPlayback({playing: !$("model").paused && !!engine.bound, resumable: !!engine.bound, busy: $("play").disabled});
 }
@@ -1974,5 +2011,6 @@ sync.start();
 window.addEventListener("online", () => sync.start());
 window.addEventListener("online", () => startAutoTranslation(appTab === "study" ? lesson() : null, true));
 if (store.error) say(store.error, "error");
+if (legacy.error) say(legacy.error, 'error');
 if (identityError)
-  say(identityError + " Đã mở vùng dữ liệu của trình duyệt này.", "error");
+  say(identityError + " Đã tạo liên kết vùng dữ liệu mới; lưu lại liên kết đồng bộ.", "error");
