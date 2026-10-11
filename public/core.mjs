@@ -1,3 +1,4 @@
+import { sanitizePhonetics } from './ipa.mjs';
 import { sanitizeExperience } from './preferences.mjs';
 export const APP_VERSION = 2;
 export const MAX_TEXT = 30000,
@@ -487,6 +488,7 @@ export function createLesson(title, sentences) {
       autoRecord: false,
       role: "",
       captions: true,
+      ipa: true,
       translation: false,
       source: "tts",
       dictType: "full",
@@ -779,6 +781,7 @@ export function validateLesson(input) {
   s.autoNext = !!t.autoNext;
   s.autoRecord = !!t.autoRecord;
   s.captions = t.captions !== false;
+  s.ipa = t.ipa !== false;
   s.translation = !!t.translation;
   if (t.experience && typeof t.experience === "object")
     s.experience = sanitizeExperience(t.experience);
@@ -795,6 +798,8 @@ export function validateLesson(input) {
       updatedAt: finite(data.updatedAt, 0, Date.now() + 86400000, 0),
     };
   }
+  const phonetics = sanitizePhonetics(input.phonetics, sentences);
+  if (phonetics) lesson.phonetics = phonetics;
   s.role = Object.hasOwn(lesson.speakers, t.role) ? t.role : "";
   s.source = t.source === "original" ? "original" : "tts";
   s.dictType = t.dictType === "blanks" ? "blanks" : "full";

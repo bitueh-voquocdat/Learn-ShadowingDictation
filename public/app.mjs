@@ -1,3 +1,4 @@
+import { IPAQueue, ipaKey, renderIPAWord, initIPAUI, followIPAHighlight } from "./ipa.mjs";
 import { renderLessonCard, createLessonDeletion, installLessonDeletionStyles } from "./lesson-delete.mjs";
 import * as C from "./core.mjs";
 import { LessonStore } from "./store.mjs";
@@ -112,6 +113,7 @@ const sync = new CloudSync({
         } else await hydrate(id, true);
         render();
         startAutoTranslation(appTab === "study" ? lesson() : null);
+        void startAutoIPA(appTab === "study" ? lesson() : null);
       })();
     }
   },
@@ -227,6 +229,31 @@ function putLesson(l) {
     return false;
   }
 }
+// IPA is created with new lessons and persisted by the existing Firebase save path.
+const ipa = new IPAQueue({
+  present: l => store.lessons.includes(l),
+  save: l => store.lessons.includes(l) ? persist(true, l.id) : Promise.resolve(),
+  change: l => { if (lesson() === l && appTab === "study" && l.mode === "shadow") renderCaption(); },
+  status: (l, state) => {
+    if (state === "error" && lesson() === l)
+      say(l.phonetics?.error || "Chưa tải đủ từ điển IPA. App sẽ thử lại khi mở bài hoặc có mạng.", "info");
+  },
+});
+const ipaDisplay = initIPAUI({onToggle: value => {
+  const l = lesson();
+  if (!l || appTab !== "study" || l.mode !== "shadow") return;
+  l.settings.ipa = value;
+  renderCaption();
+  persist();
+}});
+function startAutoIPA(l, options = {}) {
+  if (!l || l.kind === "tts") return Promise.resolve(null);
+  return ipa.ensure(l, options).catch(e => {
+    say("Chưa hoàn tất IPA: " + (e.message || "Thử lại khi mở bài."), "info");
+    return null;
+  });
+}
+void ipa.warm().catch(() => {});
 const translationRetryAt = new Map();
 const translations = new TranslationQueue({
   save: async (l) => {
@@ -432,6 +459,7 @@ function render() {
   syncExperience(appTab === "study" ? lesson() : null);
   renderLibrary();
   const l = lesson();
+  ipaDisplay.sync(appTab === "study" ? l : null);
   $("tts-workspace").hidden = appTab !== "tts";
   $("study-tab").classList.toggle("active", appTab === "study");
   $("tts-tab").classList.toggle("active", appTab === "tts");
@@ -560,12 +588,18 @@ function renderCaption() {
     l.mode === "dict"
       ? "Nghe kỹ và ghi lại những gì bạn nghe."
       : "Phụ đề đang ẩn.";
+  const showIPA = l.mode === "shadow" && l.settings.ipa !== false;
+  $("caption").classList.toggle("ipa-caption", showIPA);
+  $("stage").classList.toggle("has-ipa", showIPA && visible);
+  delete $("caption").dataset.ipaActive;
   let i = 0;
   $("caption").innerHTML = s.text.replace(
     /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*(?:-[\p{L}\p{N}]+)*|[^\p{L}\p{N}]+/gu,
     (m) =>
       C.tokens(m).length
-        ? `<button data-word="${i++}" title="Nghe lại từ / câu">${esc(m)}</button>`
+        ? showIPA
+          ? renderIPAWord(m, i++, l.phonetics?.words?.[ipaKey(m)], ipa.jobs.has(l.id))
+          : `<button data-word="${i++}" title="Nghe lại từ / câu">${esc(m)}</button>`
         : esc(m),
   );
   $("translation").hidden = !(l.settings.translation && l.mode !== "dict");
@@ -618,6 +652,7 @@ function onTime(t) {
     .forEach((el) =>
       el.classList.toggle("active", Number(el.dataset.word) === word),
     );
+  followIPAHighlight();
 }
 function renderDictStats() {
   const p = progress()?.dict;
@@ -779,6 +814,7 @@ async function selectLesson(id) {
   if (!assets(id)._partial) say("Đã mở bài và khôi phục thiết đặt.");
   preload();
   startAutoTranslation(lesson());
+  void startAutoIPA(lesson());
 }
 async function navigate(index, mode = null) {
   await stopAll();
@@ -1353,6 +1389,7 @@ async function importFile(file) {
   )
     return;
   const saved = putLesson(l);
+  await startAutoIPA(l);
   assetLibrary.set(l.id, a);
   if (sync.records.has(l.id))
     a._cloudRevision = sync.records.get(l.id).revision;
@@ -1401,6 +1438,8 @@ function analyse() {
 async function createNew(event) {
   event.preventDefault();
   if (!preview.length || $("create-confirm").disabled) return;
+  const createLabel = $("create-confirm").textContent;
+  $("create-confirm").disabled = true;
   try {
     if (
       preview.some(
@@ -1415,6 +1454,8 @@ async function createNew(event) {
     await stopAll();
     await persist(true);
     const l = C.createLesson($("new-title").value, preview);
+    $("create-confirm").textContent = "Đang tạo IPA…";
+    await startAutoIPA(l, {allowNew: true});
     l.settings.experience = experiencePreferences();
     const saved = putLesson(l);
     assetLibrary.set(l.id, { tts: {}, full: {}, recordings: {}, source: null });
@@ -1434,6 +1475,9 @@ async function createNew(event) {
     startAutoTranslation(l);
   } catch (e) {
     $("create-error").textContent = e.message;
+  } finally {
+    $("create-confirm").textContent = createLabel;
+    $("create-confirm").disabled = !preview.length;
   }
 }
 function editSentence() {
@@ -1507,6 +1551,7 @@ async function saveSentence(event) {
     $("edit-dialog").close();
     render();
     startAutoTranslation(l, true);
+    void startAutoIPA(l);
     if (textChanged) say(l.settings.source === "original"
       ? "Đã cập nhật câu và gửi đồng bộ. Kiểm tra lại mốc audio gốc để phụ đề khớp nội dung mới."
       : "Đã cập nhật câu và gửi đồng bộ. Audio sẽ được tạo lại khi nghe; có thể chọn Chuẩn bị audio.", "success");
@@ -1808,6 +1853,7 @@ const deleteLessonById = createLessonDeletion({
   store, sync, media, scope: identity.scope, confirm: confirmAction,
   beforeRemove: async (id, active) => {
     translations.cancel(id);
+    ipa.cancel(id);
     if (active) await stopAll();
     clearTimeout(saveTimers.get(id));
     saveTimers.delete(id);
@@ -1836,6 +1882,7 @@ $("demo").onclick = safe(async () => {
       "Alice: Good morning! Could I have a cup of tea, please?\nRyan: Of course. Would you like anything to eat?\nAlice: Yes, a sandwich would be lovely.\nRyan: That will be six pounds.\nAlice: Here you are. Thank you very much.\nRyan: You are welcome. Have a nice day!",
     ),
   );
+  await startAutoIPA(l, {allowNew: true});
   putLesson(l);
   bindAssets();
   render();
@@ -2027,6 +2074,7 @@ converter.renderHistory();
 sync.start();
 window.addEventListener("online", () => sync.start());
 window.addEventListener("online", () => startAutoTranslation(appTab === "study" ? lesson() : null, true));
+window.addEventListener("online", () => { void startAutoIPA(appTab === "study" ? lesson() : null, {force: true}); });
 if (store.error) say(store.error, "error");
 if (legacy.error) say(legacy.error, 'error');
 if (identityError)
