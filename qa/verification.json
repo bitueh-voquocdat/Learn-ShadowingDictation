@@ -1,0 +1,54 @@
+{
+  "tests": {
+    "passed": 135,
+    "failed": 0,
+    "existing": 100,
+    "new": 35
+  },
+  "syntax": [
+    {
+      "file": "public/app.mjs",
+      "syntax": "passed"
+    },
+    {
+      "file": "public/core.mjs",
+      "syntax": "passed"
+    },
+    {
+      "file": "public/presentation.mjs",
+      "syntax": "passed"
+    },
+    {
+      "file": "public/youtube-source.mjs",
+      "syntax": "passed"
+    },
+    {
+      "file": "public/youtube-player.mjs",
+      "syntax": "passed"
+    },
+    {
+      "file": "public/study-audio.mjs",
+      "syntax": "passed"
+    }
+  ],
+  "changed_existing_files": [
+    "public/app.mjs",
+    "public/core.mjs",
+    "public/index.html",
+    "public/presentation.mjs",
+    "vercel.json"
+  ],
+  "new_runtime_files": [
+    "public/youtube-source.mjs",
+    "public/youtube-player.mjs",
+    "public/study-audio.mjs",
+    "public/youtube.css"
+  ],
+  "real_browser_test": false,
+  "live_youtube_test": false,
+  "live_firebase_test": false,
+  "firestore_simulation": "Two independent CloudSync clients with real serialization/encryption and mock transport",
+  "ui_simulation": "Actual app create/render handlers and a mock YouTube API",
+  "other_runtime_files": "Compared against the baseline and unchanged",
+  "deployment": "Not performed"
+}

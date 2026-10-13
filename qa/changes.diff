@@ -1,0 +1,425 @@
+--- before/vercel.json
++++ after/vercel.json
+@@ -23,7 +23,7 @@
+         },
+         {
+           "key": "Referrer-Policy",
+-          "value": "same-origin"
++          "value": "strict-origin-when-cross-origin"
+         },
+         {
+           "key": "X-Frame-Options",
+@@ -31,7 +31,7 @@
+         },
+         {
+           "key": "Content-Security-Policy",
+-          "value": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' https://firestore.googleapis.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
++          "value": "default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' https://firestore.googleapis.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; frame-src https://www.youtube.com https://www.youtube-nocookie.com"
+         }
+       ]
+     }
+--- before/public/index.html
++++ after/public/index.html
+@@ -9,6 +9,7 @@
+   <link rel="icon" href="/icon.svg" />
+   <link rel="stylesheet" href="/style.css" />
+   <link rel="stylesheet" href="/experience.css" />
++  <link rel="stylesheet" href="/youtube.css" />
+   <script type="module" src="/app.mjs"></script>
+ </head>
+ <body>
+@@ -60,7 +61,7 @@
+             <div class="sentence-header"><div class="sentence-tools"><span id="sentence-position"></span><button id="prev" class="icon-button" aria-label="Câu trước" title="Câu trước"><span data-icon="chevron-left"></span></button><button id="next" class="icon-button" aria-label="Câu tiếp" title="Câu tiếp"><span data-icon="chevron-right"></span></button><button id="speaker-toggle" class="speaker-pill" data-action="show-settings" title="Giọng đọc của người nói"><span data-icon="user"></span><span id="speaker" class="speaker"></span><span data-icon="chevron-down"></span></button><span id="timing-tag" class="sr-only"></span></div>
+               <div class="sentence-actions"><button id="star" class="icon-button" title="Lưu câu khó" aria-label="Lưu câu khó" aria-pressed="false">☆</button><details class="dropdown"><summary class="icon-button" aria-label="Thao tác với câu"><span data-icon="more"></span></summary><div class="menu-panel"><button id="edit-sentence"><span data-icon="edit"></span>Sửa câu</button><button data-action="show-notes"><span data-icon="note"></span>Ghi chú câu</button></div></details></div>
+             </div>
+-            <div id="stage" class="stage"><video id="model" preload="metadata" playsinline></video><div class="caption-content"><div id="caption" class="caption" aria-label="Phụ đề"></div><p id="caption-hidden" hidden>Nghe kỹ và ghi lại những gì bạn nghe.</p><div id="translation" class="translation" hidden></div></div></div>
++            <div id="stage" class="stage"><video id="model" preload="metadata" playsinline></video><div id="youtube-player" hidden aria-label="Video YouTube của bài học"></div><div class="caption-content"><div id="caption" class="caption" aria-label="Phụ đề"></div><p id="caption-hidden" hidden>Nghe kỹ và ghi lại những gì bạn nghe.</p><div id="translation" class="translation" hidden></div></div></div>
+             <div class="timeline"><span id="elapsed">0:00</span><input id="seek" type="range" min="0" max="1" step="0.01" value="0" aria-label="Tua trong câu" disabled /><span id="duration">0:00</span></div>
+             <div class="transport">
+               <div class="transport-left"><label for="speed" class="sr-only">Tốc độ nghe</label><select id="speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+@@ -155,7 +156,8 @@
+         ><label
+           >Nguồn âm thanh<select id="source">
+             <option value="tts">Giọng UK từ văn bản</option>
+-            <option value="original">Audio/video gốc + mốc phụ đề</option>
++            <option value="youtube" disabled>YouTube · âm thanh gốc</option>
++              <option value="original">Audio/video gốc + mốc phụ đề</option>
+           </select></label
+         ><label>Giọng mặc định<select id="voice"></select></label>
+         <div>
+@@ -275,6 +277,11 @@
+             placeholder="A conversation at the café"
+             required
+         /></label>
++        <label>Nguồn bài<select id="new-source-type"><option value="text">Văn bản / phụ đề</option><option value="youtube">YouTube + transcript</option></select></label>
++        <div id="youtube-import-fields" class="youtube-import-fields" hidden>
++          <label>Link video YouTube<input id="new-youtube-url" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=…" /></label>
++          <label>Kết thúc cuối (giây)<input id="new-youtube-end" type="number" min="0" max="86400" step="0.01" placeholder="Tùy chọn" title="Mốc cuối của dòng transcript cuối; bỏ trống để ước lượng. SRT/VTT dùng mốc có sẵn." /></label>
++        </div>
+         <div class="dialog-line">
+           <label for="new-text">Văn bản / phụ đề</label
+           ><button type="button" id="import-text" class="quiet">
+@@ -300,7 +307,7 @@
+         </div>
+         <details class="help-note"><summary>Cách chia câu</summary><p class="subtle">
+           Chia theo dấu câu, lượt nói và ranh giới mệnh đề; thời lượng từ văn
+-          bản là ước lượng. Kiểm tra/sửa bên dưới trước khi tạo.
++          bản là ước lượng. YouTube cần transcript có mốc thời gian hoặc SRT/VTT; app ghép dòng sub thành câu, giữ mốc và ước lượng các phần tách nhỏ. Có thể sửa mốc trước khi tạo.
+         </p></details>
+         <div id="preview" class="preview"></div>
+         <p id="create-error" role="status" class="error-text"></p>
+--- before/public/core.mjs
++++ after/public/core.mjs
+@@ -1,3 +1,4 @@
++import { sanitizeYouTubeSource, sanitizeSubtitleTiming } from './youtube-source.mjs';
+ import { sanitizePhonetics } from './ipa.mjs';
+ import { sanitizeExperience } from './preferences.mjs';
+ export const APP_VERSION = 2;
+@@ -712,6 +713,7 @@
+       seen.add(id);
+       const start = s.start === null ? null : finite(s.start, 0, 86400, null),
+         end = s.end === null ? null : finite(s.end, 0, 86400, null);
++      const subtitleTiming = sanitizeSubtitleTiming(s.subtitleTiming, {text:s.text,start,end});
+       return {
+         id,
+         text: s.text,
+@@ -727,6 +729,7 @@
+           ? s.timing
+           : "tts",
+         star: !!s.star,
++        ...(subtitleTiming ? {subtitleTiming} : {}),
+       };
+     });
+   if (sentences.reduce((n, s) => n + s.text.length, 0) > MAX_TEXT)
+@@ -801,7 +804,11 @@
+   const phonetics = sanitizePhonetics(input.phonetics, sentences);
+   if (phonetics) lesson.phonetics = phonetics;
+   s.role = Object.hasOwn(lesson.speakers, t.role) ? t.role : "";
+-  s.source = t.source === "original" ? "original" : "tts";
++  const youtube = sanitizeYouTubeSource(input.youtube);
++  if (youtube && lesson.kind !== "tts") lesson.youtube = youtube;
++  if (t.source === "youtube" && (!lesson.youtube || sentences.some(x => x.start === null || x.end === null)))
++    throw Error("Bài YouTube thiếu link hoặc mốc thời gian hợp lệ.");
++  s.source = t.source === "youtube" ? "youtube" : t.source === "original" ? "original" : "tts";
+   s.dictType = t.dictType === "blanks" ? "blanks" : "full";
+   if (["repeat", "simultaneous", "delayed", "continuous"].includes(t.shadow))
+     s.shadow = t.shadow;
+--- before/public/app.mjs
++++ after/public/app.mjs
+@@ -1,3 +1,5 @@
++import { StudyAudioEngine } from "./study-audio.mjs";
++import { youtubeVideoID, youtubeURL, createYouTubeSentences } from "./youtube-source.mjs";
+ import { IPAQueue, ipaKey, renderIPAWord, initIPAUI, followIPAHighlight } from "./ipa.mjs";
+ import { renderLessonCard, createLessonDeletion, installLessonDeletionStyles } from "./lesson-delete.mjs";
+ import * as C from "./core.mjs";
+@@ -128,6 +130,8 @@
+ migration = new SyncMigration({sync, sources: identity.sources,
+   onComplete: () => history.replaceState(null, '', identity.url)});
+ let preview = [],
++  youtubePreview = null,
++  previewSignature = "",
+   runController = null,
+   prepareController = null,
+   mp3Controller = null,
+@@ -319,7 +323,20 @@
+       `<option value="${v}" ${v === selected ? "selected" : ""}>${v.replace("en-GB-", "").replace("Neural", "")} · ${/Sonia|Libby/.test(v) ? "Nữ" : "Nam"}</option>`,
+   ).join("");
+ }
+-const engine = new AudioEngine($("model"), onTime);
++const engine = new StudyAudioEngine($("model"), $("youtube-player"), onTime, {
++  onState: () => updatePlaybackUI(),
++  onError: error => say(error.message, "error"),
++  onRate: rate => {
++    const l = lesson();
++    if (!l || l.settings.source !== "youtube") return;
++    if (!$("speed").querySelector(`option[value="${rate}"]`)) {
++      const option = document.createElement("option");
++      option.value = String(rate); option.textContent = `${rate}×`; $("speed").append(option);
++    }
++    $("speed").value = String(rate);
++    if (l.settings.speed !== rate) { l.settings.speed = rate; persist(); }
++  },
++});
+ const converter = new Converter({
+   store,
+   assets,
+@@ -409,6 +426,20 @@
+   preloadController?.abort();
+   const l = lesson();
+   if (!l || l.settings.source === "original") return;
++  if (l.settings.source === "youtube") {
++    const ctl = new AbortController(); preloadController = ctl;
++    engine.syncLesson(l);
++    $("audio-status").textContent = "Đang chuẩn bị video YouTube…";
++    engine.warm(l, ctl.signal).then(() => {
++      if (!ctl.signal.aborted && lesson() === l) $("audio-status").textContent = "Video YouTube đã sẵn sàng";
++    }).catch(e => {
++      if (e.name !== "AbortError" && lesson() === l) {
++        $("audio-status").textContent = "Bấm phát để thử tải lại YouTube";
++        say(e.message, "error");
++      }
++    }).finally(() => { if (preloadController === ctl) preloadController = null; });
++    return;
++  }
+   const ctl = new AbortController();
+   preloadController = ctl;
+   engine
+@@ -460,6 +491,7 @@
+   renderLibrary();
+   const l = lesson();
+   ipaDisplay.sync(appTab === "study" ? l : null);
++  engine.syncLesson(appTab === "study" ? l : null);
+   $("tts-workspace").hidden = appTab !== "tts";
+   $("study-tab").classList.toggle("active", appTab === "study");
+   $("tts-tab").classList.toggle("active", appTab === "tts");
+@@ -493,6 +525,8 @@
+     s = sentence(),
+     p = progress();
+   if (!s) return;
++  engine.syncLesson(l);
++  $("source").querySelector('option[value="youtube"]').disabled = !l.youtube;
+   if ($("speech-details").dataset.sentence !== s.id) {
+     $("speech-details").open = false;
+     $("speech-details").dataset.sentence = s.id;
+@@ -533,9 +567,11 @@
+       )
+       .join("");
+   renderReaders();
+-  $("source-name").textContent = l.sourceName
+-    ? `${l.sourceName}${assets().source ? "" : " · cần chọn lại file hoặc mở bài có kèm audio"}`
+-    : "Chưa có file gốc";
++  $("source-name").textContent = l.settings.source === "youtube" && l.youtube
++    ? "YouTube · âm thanh gốc · cần Internet"
++    : l.sourceName
++      ? `${l.sourceName}${assets().source ? "" : " · cần chọn lại file hoặc mở bài có kèm audio"}`
++      : "Chưa có file gốc";
+   $("dict-answer").value = p.dict.draft;
+   dictType = l.settings.dictType || "full";
+   $("dict-type").value = dictType;
+@@ -609,9 +645,10 @@
+       : "Bản dịch chưa sẵn sàng. Thử lại trong Bản dịch toàn bài.";
+   $("stage").classList.toggle(
+     "has-video",
+-    l.settings.source === "original" &&
+-      (assets().source?.mime || "").startsWith("video/"),
++    l.settings.source === "youtube" || (l.settings.source === "original" &&
++      (assets().source?.mime || "").startsWith("video/")),
+   );
++  $("stage").classList.toggle("has-youtube", l.settings.source === "youtube");
+ }
+ function onTime(t) {
+   if (!sentence()) return;
+@@ -850,8 +887,8 @@
+     $("play").disabled = false;
+     $("audio-status").textContent = engine.current.words.every((w) => w.exact)
+       ? "Mốc từng từ từ dịch vụ giọng đọc"
+-      : l.settings.source === "original"
+-        ? "Mốc câu từ phụ đề · chưa căn chỉnh từng từ"
++      : ["original", "youtube"].includes(l.settings.source)
++        ? "Mốc câu từ phụ đề · mốc từng từ ước lượng"
+         : "Mốc từng từ có phần ước lượng";
+     for (let i = 0; i < l.settings.repeat; i++) {
+       markListen(l, s);
+@@ -887,7 +924,7 @@
+   $("audio-status").textContent = "Nghe lại từ trong câu…";
+   try {
+     await engine.word(l, s, Number(index), ctl.signal, isolated);
+-    if (engine.current?.source === "original")
++    if (["original", "youtube"].includes(engine.current?.source))
+       say("Audio gốc chưa có mốc từng từ: đã phát lại câu chứa từ đó.");
+   } finally {
+     if (runController === ctl) runController = null;
+@@ -1274,6 +1311,11 @@
+     ctl = new AbortController();
+   prepareController = ctl;
+   try {
++    if (l.settings.source === "youtube") {
++      await engine.warm(l, ctl.signal);
++      say("Video YouTube đã sẵn sàng. Âm thanh được phát trực tiếp từ video.", "success");
++      return;
++    }
+     await engine.ensureLesson(
+       l,
+       ctl.signal,
+@@ -1399,12 +1441,17 @@
+   resultCache.clear();
+   render();
+   if (l.kind === "tts") await converter.open(l.id);
+-  else preload();
++  else { preload(); if (l.youtube) startAutoTranslation(l); }
+   if (saved) say("Đã mở bài, tiến độ và audio có trong file.", "success");
+ }
+ function showCreate() {
+   creating = true;
+-  preview = [];
++  preview = []; youtubePreview = null; previewSignature = "";
++  $("new-source-type").value = "text";
++  $("youtube-import-fields").hidden = true;
++  $("new-youtube-url").required = false;
++  $("new-youtube-url").value = "";
++  $("new-youtube-end").value = "";
+   $("new-title").value = "";
+   $("new-text").value = "";
+   $("preview").innerHTML = "";
+@@ -1416,21 +1463,38 @@
+   $("preview").innerHTML = preview
+     .map(
+       (s, i) =>
+-        `<div class="preview-row"><textarea data-preview-text="${i}" aria-label="Câu ${i + 1}" maxlength="1200">${esc(s.text)}</textarea><div><span>${i + 1}</span><input data-preview-speaker="${i}" value="${esc(s.speaker)}" placeholder="Người nói" aria-label="Người nói câu ${i + 1}" maxlength="40"><span>${s.start === null ? "Giọng UK" : `${s.start.toFixed(2)}–${s.end.toFixed(2)}s${s.timing === "estimated" ? " · ước lượng" : ""}`}</span><button type="button" class="quiet" data-merge="${i}" ${i === preview.length - 1 ? "disabled" : ""}>Gộp câu sau</button><button type="button" class="quiet" data-remove="${i}">Xóa</button></div></div>`,
++        `<div class="preview-row"><textarea data-preview-text="${i}" aria-label="Câu ${i + 1}" maxlength="1200">${esc(s.text)}</textarea><div><span>${i + 1}</span><input data-preview-speaker="${i}" value="${esc(s.speaker)}" placeholder="Người nói" aria-label="Người nói câu ${i + 1}" maxlength="40"><span>${youtubePreview ? `<label class="preview-time">Từ <input type="number" min="0" max="86400" step="0.01" data-preview-start="${i}" value="${s.start}" aria-label="Mốc đầu câu ${i+1}"> đến <input type="number" min="0" max="86400" step="0.01" data-preview-end="${i}" value="${s.end}" aria-label="Mốc cuối câu ${i+1}">s</label>` : s.start === null ? "Giọng UK" : `${s.start.toFixed(2)}–${s.end.toFixed(2)}s${s.timing === "estimated" ? " · ước lượng" : ""}`} </span><button type="button" class="quiet" data-merge="${i}" ${i === preview.length - 1 ? "disabled" : ""}>Gộp câu sau</button><button type="button" class="quiet" data-remove="${i}">Xóa</button></div></div>`,
+     )
+     .join("");
+   $("create-confirm").disabled = !preview.length;
+ }
++function createInputSignature() {
++  return JSON.stringify([$("new-source-type").value, $("new-text").value,
++    $("new-youtube-url").value.trim(), $("new-youtube-end").value, $("segment-size").value]);
++}
++function invalidateYouTubePreview() {
++  if (preview.length) {
++    $("create-confirm").disabled = true;
++    $("create-error").textContent = "Thông tin nguồn đã đổi. Bấm Phân tích & chia câu lại.";
++  }
++}
+ function analyse() {
+   try {
+-    preview = C.parseTranscript($("new-text").value, {
+-      maxWords: Number($("segment-size").value),
+-    });
++    const raw = $("new-text").value, maxWords = Number($("segment-size").value);
++    if ($("new-source-type").value === "youtube") {
++      const videoId = youtubeVideoID($("new-youtube-url").value);
++      const lastEnd = $("new-youtube-end").value.trim() === "" ? null : Number($("new-youtube-end").value);
++      const parsed = createYouTubeSentences(raw, C, {maxWords, lastEnd});
++      preview = parsed.sentences;
++      youtubePreview = {version: 1, videoId, url: youtubeURL(videoId), format: parsed.format,
++        transcript: raw, importedAt: Date.now(), wordTiming: "estimated"};
++    } else { youtubePreview = null; preview = C.parseTranscript(raw, {maxWords}); }
++    previewSignature = createInputSignature();
+     renderPreview();
+     $("create-error").textContent =
+       `${preview.length} đoạn luyện · kiểm tra nội dung và người nói trước khi tạo.`;
+   } catch (e) {
+-    preview = [];
++    preview = []; youtubePreview = null; previewSignature = "";
+     renderPreview();
+     $("create-error").textContent = e.message;
+   }
+@@ -1441,6 +1505,13 @@
+   const createLabel = $("create-confirm").textContent;
+   $("create-confirm").disabled = true;
+   try {
++    if ($("new-source-type").value === "youtube") {
++      if (!youtubePreview || previewSignature !== createInputSignature())
++        throw Error("Hãy Phân tích & chia câu lại sau khi sửa link hoặc transcript.");
++      if (preview.some((s,i) => !Number.isFinite(s.start) || !Number.isFinite(s.end) || s.start < 0 ||
++        s.end > 86400 || s.end <= s.start || i > 0 && s.start < preview[i-1].start))
++        throw Error("Các mốc câu phải tăng dần; mốc cuối phải lớn hơn mốc đầu.");
++    }
+     if (
+       preview.some(
+         (s) =>
+@@ -1454,6 +1525,10 @@
+     await stopAll();
+     await persist(true);
+     const l = C.createLesson($("new-title").value, preview);
++    if (youtubePreview && $("new-source-type").value === "youtube") {
++      l.youtube = structuredClone(youtubePreview);
++      l.settings.source = "youtube";
++    }
+     $("create-confirm").textContent = "Đang tạo IPA…";
+     await startAutoIPA(l, {allowNew: true});
+     l.settings.experience = experiencePreferences();
+@@ -1530,6 +1605,7 @@
+       resultCache.delete(`${s.id}:dict`);
+       resultCache.delete(`${s.id}:shadow`);
+     }
++    if (textChanged || s.start !== start || s.end !== end) delete s.subtitleTiming;
+     s.text = text;
+     s.speaker = $("edit-speaker").value.trim();
+     if (translationChanged) {
+@@ -1552,7 +1628,7 @@
+     render();
+     startAutoTranslation(l, true);
+     void startAutoIPA(l);
+-    if (textChanged) say(l.settings.source === "original"
++    if (textChanged) say(["original", "youtube"].includes(l.settings.source)
+       ? "Đã cập nhật câu và gửi đồng bộ. Kiểm tra lại mốc audio gốc để phụ đề khớp nội dung mới."
+       : "Đã cập nhật câu và gửi đồng bộ. Audio sẽ được tạo lại khi nghe; có thể chọn Chuẩn bị audio.", "success");
+   } catch (e) {
+@@ -1633,6 +1709,15 @@
+   .querySelectorAll("[data-close]")
+   .forEach((b) => (b.onclick = () => $(b.dataset.close).close()));
+ $("analyse").onclick = analyse;
++$("new-source-type").onchange = () => {
++  const youtube = $("new-source-type").value === "youtube";
++  $("youtube-import-fields").hidden = !youtube;
++  $("new-youtube-url").required = youtube;
++  preview = []; youtubePreview = null; previewSignature = ""; renderPreview();
++  $("create-error").textContent = "";
++};
++for (const id of ["new-youtube-url", "new-youtube-end", "segment-size"])
++  $(id).addEventListener("input", invalidateYouTubePreview);
+ $("new-text").oninput = () => {
+   if (preview.length) {
+     $("create-confirm").disabled = true;
+@@ -1764,7 +1849,8 @@
+ };
+ $("speed").onchange = () => {
+   lesson().settings.speed = Number($("speed").value);
+-  $("model").playbackRate = lesson().settings.speed;
++  lesson().settings.speed = engine.setRate(lesson().settings.speed);
++  $("speed").value = String(lesson().settings.speed);
+   persist();
+ };
+ for (const [id, key] of [
+@@ -1799,7 +1885,7 @@
+     }
+     persist();
+     renderPractice();
+-    if (id === "voice") preload();
++    if (id === "voice" || id === "source") preload();
+   });
+ $("attach-source").onclick = () => $("source-file").click();
+ $("source-file").onchange = safe(async () => {
+@@ -1917,6 +2003,7 @@
+           throw Error("Hai câu có nguồn thời gian khác nhau; hãy giữ riêng.");
+         if (a.text.length + next.text.length + 1 > 1200)
+           throw Error("Câu gộp quá dài.");
++        delete a.subtitleTiming;
+         a.text += " " + next.text;
+         a.end = next.end;
+         a.timing =
+@@ -1965,7 +2052,11 @@
+     preview[Number(el.dataset.previewText)].text = el.value;
+   else if (el.dataset.previewSpeaker !== undefined)
+     preview[Number(el.dataset.previewSpeaker)].speaker = el.value;
+-  else if (el.dataset.blank !== undefined) {
++  else if (el.dataset.previewStart !== undefined || el.dataset.previewEnd !== undefined) {
++    const index = Number(el.dataset.previewStart ?? el.dataset.previewEnd), s = preview[index];
++    if (s) { s[el.dataset.previewStart !== undefined ? "start" : "end"] = el.value.trim() === "" ? null : Number(el.value);
++      s.timing = "cue"; delete s.subtitleTiming; }
++  } else if (el.dataset.blank !== undefined) {
+     progress().dict.blanks[el.dataset.blank] = el.value;
+     persist();
+   }
+@@ -2053,7 +2144,7 @@
+   if (document.visibilityState === 'visible') void pruneLocalRecordings();
+ });
+ function updatePlaybackUI() {
+-  syncPlayback({playing: !$("model").paused && !!engine.bound, resumable: !!engine.bound, busy: $("play").disabled});
++  syncPlayback({playing: !engine.paused && !!engine.bound, resumable: !!engine.bound, busy: $("play").disabled});
+ }
+ $("main-play").onclick = () => {
+   if (engine.bound) $("pause").click();
+--- before/public/presentation.mjs
++++ after/public/presentation.mjs
+@@ -191,7 +191,7 @@
+   $('step-crumb').textContent = name;
+   $('mode-icon').innerHTML = icon(glyph);
+   const speakers = readerStats(l).length;
+-  $('lesson-meta').innerHTML = `<span class="meta-item">${icon('write')}${l.sentences.length} câu</span><span class="meta-divider"></span><span class="meta-item">${icon('user')}${speakers} người đọc</span><span class="meta-divider"></span><span class="meta-item">${icon('audio')}${l.settings.source === 'original' ? 'Audio gốc' : 'Giọng UK'}</span>`;
++  $('lesson-meta').innerHTML = `<span class="meta-item">${icon('write')}${l.sentences.length} câu</span><span class="meta-divider"></span><span class="meta-item">${icon('user')}${speakers} người đọc</span><span class="meta-divider"></span><span class="meta-item">${icon('audio')}${l.settings.source === 'youtube' ? 'YouTube · audio gốc' : l.settings.source === 'original' ? 'Audio gốc' : 'Giọng UK'}</span>`;
+   const completed = Object.values(l.progress).filter(p=>p.completed).length;
+   $('lesson-progress').max = l.sentences.length;
+   $('lesson-progress').value = completed;

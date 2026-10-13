@@ -1,0 +1,18 @@
+/* New controls are scoped to YouTube import and playback. */
+.youtube-import-fields {display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:12px;margin:12px 0}
+.youtube-import-fields[hidden],#youtube-player[hidden] {display:none!important}
+.youtube-import-fields label {min-width:0}
+.youtube-import-fields input {width:100%}
+.preview-time {display:inline-flex;gap:4px;align-items:center;font-size:12px}
+.preview-time input {width:78px!important;min-width:0!important;padding:5px!important}
+.stage.has-youtube {display:flex;flex-direction:column;padding:0;overflow:hidden;min-height:0;max-height:none;align-items:stretch;justify-content:flex-start}
+#youtube-player {width:100%;flex:none;line-height:0;height:240px;background:#111}
+#youtube-player iframe {display:block;width:100%;height:100%;min-height:200px;border:0}
+.stage.has-youtube #model {display:none}
+.stage.has-youtube .caption-content {position:static;width:100%;padding:14px 20px;flex:none;overflow-y:auto;max-height:180px;background:var(--accent-soft,#f3f6ff);border-radius:0}
+.stage.has-youtube .caption {font-size:clamp(18px,2vw,25px);line-height:1.65;color:inherit}
+.stage.has-youtube.has-ipa .caption-content {max-height:185px}
+.stage.has-youtube .translation,.stage.has-youtube #caption-hidden {font-size:14px;color:var(--muted,#65748d)}
+@media(min-width:900px) and (min-height:800px){#youtube-player{height:270px}}
+@media(max-width:600px){.youtube-import-fields{grid-template-columns:1fr}.stage.has-youtube .caption-content{padding:10px 14px;max-height:145px}#youtube-player{height:210px}.preview-time input{width:68px!important}}
+@media(max-height:740px){#youtube-player{height:200px}.stage.has-youtube .caption-content{max-height:125px;padding:8px 14px}}
