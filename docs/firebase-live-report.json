@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "project": "shadow-study-mindlab",
+  "sdk": "13.0.0",
+  "transport": "rest",
+  "checks": [
+    "encrypted lesson write/read",
+    "MP3 chunk write/read",
+    "voice settings retained",
+    "transaction revision update",
+    "second client restored progress"
+  ],
+  "chunks": 3,
+  "temporaryRecordsRemoved": true
+}

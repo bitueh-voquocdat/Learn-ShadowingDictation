@@ -1,0 +1,610 @@
+TAP version 13
+# Subtest: default app route uses native Translator, no server fetch; results stay portable
+ok 1 - default app route uses native Translator, no server fetch; results stay portable
+  ---
+  duration_ms: 23.075178
+  type: 'test'
+  ...
+# Subtest: first download requires activation, reports progress, and shares one model
+ok 2 - first download requires activation, reports progress, and shares one model
+  ---
+  duration_ms: 1.550274
+  type: 'test'
+  ...
+# Subtest: unsupported API and unsupported language pair provide useful errors without deleting lessons
+ok 3 - unsupported API and unsupported language pair provide useful errors without deleting lessons
+  ---
+  duration_ms: 1.937206
+  type: 'test'
+  ...
+# Subtest: cancelled lessons do not wait for or receive a pending model download
+ok 4 - cancelled lessons do not wait for or receive a pending model download
+  ---
+  duration_ms: 1.205475
+  type: 'test'
+  ...
+# Subtest: completed items survive a later native error and retry only requests missing content
+ok 5 - completed items survive a later native error and retry only requests missing content
+  ---
+  duration_ms: 2.379101
+  type: 'test'
+  ...
+# Subtest: manual edits and changed English still reject outdated native translations
+ok 6 - manual edits and changed English still reject outdated native translations
+  ---
+  duration_ms: 1.799719
+  type: 'test'
+  ...
+# Subtest: native translation errors never replace a previous valid translation with an empty string
+ok 7 - native translation errors never replace a previous valid translation with an empty string
+  ---
+  duration_ms: 0.533453
+  type: 'test'
+  ...
+# Subtest: failed model creation resets the promise so a click can retry
+ok 8 - failed model creation resets the promise so a click can retry
+  ---
+  duration_ms: 0.731201
+  type: 'test'
+  ...
+# Subtest: model initialization has a bounded timeout instead of a permanent pending job
+ok 9 - model initialization has a bounded timeout instead of a permanent pending job
+  ---
+  duration_ms: 7.139898
+  type: 'test'
+  ...
+# Subtest: translation cancellation reaches the native operation and leaves its result unsaved
+ok 10 - translation cancellation reaches the native operation and leaves its result unsaved
+  ---
+  duration_ms: 0.9897
+  type: 'test'
+  ...
+# Subtest: already downloaded models translate even if navigator reports offline
+ok 11 - already downloaded models translate even if navigator reports offline
+  ---
+  duration_ms: 0.689057
+  type: 'test'
+  ...
+# Subtest: sentence boundaries, honorifics, decimals and dialogue
+ok 12 - sentence boundaries, honorifics, decimals and dialogue
+  ---
+  duration_ms: 19.66222
+  type: 'test'
+  ...
+# Subtest: long sentence chunks preserve words
+ok 13 - long sentence chunks preserve words
+  ---
+  duration_ms: 0.986484
+  type: 'test'
+  ...
+# Subtest: SRT boundaries, multiline and entities
+ok 14 - SRT boundaries, multiline and entities
+  ---
+  duration_ms: 0.806023
+  type: 'test'
+  ...
+# Subtest: VTT speaker tags and long cue timing
+ok 15 - VTT speaker tags and long cue timing
+  ---
+  duration_ms: 0.333001
+  type: 'test'
+  ...
+# Subtest: copied YouTube timestamps marked estimated
+ok 16 - copied YouTube timestamps marked estimated
+  ---
+  duration_ms: 0.488786
+  type: 'test'
+  ...
+# Subtest: reject invalid, oversized, empty transcripts
+ok 17 - reject invalid, oversized, empty transcripts
+  ---
+  duration_ms: 9.516807
+  type: 'test'
+  ...
+# Subtest: lenient and strict comparisons
+ok 18 - lenient and strict comparisons
+  ---
+  duration_ms: 1.627991
+  type: 'test'
+  ...
+# Subtest: missing, excess and replacement tokens
+ok 19 - missing, excess and replacement tokens
+  ---
+  duration_ms: 0.786594
+  type: 'test'
+  ...
+# Subtest: transpositions are labelled moved
+ok 20 - transpositions are labelled moved
+  ---
+  duration_ms: 0.432871
+  type: 'test'
+  ...
+# Subtest: ASR contraction normalization is isolated from dictation
+ok 21 - ASR contraction normalization is isolated from dictation
+  ---
+  duration_ms: 0.8506
+  type: 'test'
+  ...
+# Subtest: error categories are suggestions
+ok 22 - error categories are suggestions
+  ---
+  duration_ms: 0.312911
+  type: 'test'
+  ...
+# Subtest: blanks deterministic, hints progressive
+ok 23 - blanks deterministic, hints progressive
+  ---
+  duration_ms: 0.970632
+  type: 'test'
+  ...
+# Subtest: attempts, review mistakes, hinted answer is not mastered
+ok 24 - attempts, review mistakes, hinted answer is not mastered
+  ---
+  duration_ms: 1.232535
+  type: 'test'
+  ...
+# Subtest: attempt history cap
+ok 25 - attempt history cap
+  ---
+  duration_ms: 0.743389
+  type: 'test'
+  ...
+# Subtest: portable file round trip retains progress, audio, notes and roles
+ok 26 - portable file round trip retains progress, audio, notes and roles
+  ---
+  duration_ms: 4.414906
+  type: 'test'
+  ...
+# Subtest: invalid import rejects bad versions, duplicate IDs and fake MIME
+ok 27 - invalid import rejects bad versions, duplicate IDs and fake MIME
+  ---
+  duration_ms: 0.787997
+  type: 'test'
+  ...
+# Subtest: word timings mapped, absent data explicitly approximate
+ok 28 - word timings mapped, absent data explicitly approximate
+  ---
+  duration_ms: 0.357638
+  type: 'test'
+  ...
+# Subtest: local store restores lesson without audio
+ok 29 - local store restores lesson without audio
+  ---
+  duration_ms: 1.462452
+  type: 'test'
+  ...
+# Subtest: storage failure is explicit and previous stored bytes stay intact
+ok 30 - storage failure is explicit and previous stored bytes stay intact
+  ---
+  duration_ms: 0.541105
+  type: 'test'
+  ...
+# Subtest: multiple subtitle speakers remain distinct and split timing is approximate
+ok 31 - multiple subtitle speakers remain distinct and split timing is approximate
+  ---
+  duration_ms: 0.315105
+  type: 'test'
+  ...
+# Subtest: copied timestamped text keeps wrapped lines in the same interval
+ok 32 - copied timestamped text keeps wrapped lines in the same interval
+  ---
+  duration_ms: 0.220292
+  type: 'test'
+  ...
+# Subtest: malformed timing and non-word text are rejected
+ok 33 - malformed timing and non-word text are rejected
+  ---
+  duration_ms: 0.340002
+  type: 'test'
+  ...
+# Subtest: speech contraction errors refer to the original word index
+ok 34 - speech contraction errors refer to the original word index
+  ---
+  duration_ms: 0.227443
+  type: 'test'
+  ...
+# Subtest: extra words enter review; hinted answers do not resolve mistakes
+ok 35 - extra words enter review; hinted answers do not resolve mistakes
+  ---
+  duration_ms: 0.404579
+  type: 'test'
+  ...
+# Subtest: mastery and lifetime attempt counts survive capped history and file reopening
+ok 36 - mastery and lifetime attempt counts survive capped history and file reopening
+  ---
+  duration_ms: 0.919314
+  type: 'test'
+  ...
+# Subtest: corrupt local data is preserved while a new lesson can still be exported
+ok 37 - corrupt local data is preserved while a new lesson can still be exported
+  ---
+  duration_ms: 0.403737
+  type: 'test'
+  ...
+# Subtest: theme, color and feedback controls save preferences and keep sound out of playback/recording
+ok 38 - theme, color and feedback controls save preferences and keep sound out of playback/recording
+  ---
+  duration_ms: 25.579988
+  type: 'test'
+  ...
+# Subtest: default lesson and pending stores never use localStorage or the old quota
+ok 39 - default lesson and pending stores never use localStorage or the old quota
+  ---
+  duration_ms: 31.729715
+  type: 'test'
+  ...
+# Subtest: two fresh RAM clients restore progress, settings, translations, MP3 and global appearance
+ok 40 - two fresh RAM clients restore progress, settings, translations, MP3 and global appearance
+  ---
+  duration_ms: 75.215765
+  type: 'test'
+  ...
+# Subtest: recordings are excluded from encrypted manifests and cloud chunks while transcripts remain
+ok 41 - recordings are excluded from encrypted manifests and cloud chunks while transcripts remain
+  ---
+  duration_ms: 7.26715
+  type: 'test'
+  ...
+# Subtest: disk stores recordings only, replacing the same sentence while preserving other recordings
+ok 42 - disk stores recordings only, replacing the same sentence while preserving other recordings
+  ---
+  duration_ms: 2.304469
+  type: 'test'
+  ...
+# Subtest: 30-day cleanup scans unopened lessons and preserves original age on reads and exports
+ok 43 - 30-day cleanup scans unopened lessons and preserves original age on reads and exports
+  ---
+  duration_ms: 5.109466
+  type: 'test'
+  ...
+# Subtest: recordings-only disk cache cannot discard model audio references during progress save
+ok 44 - recordings-only disk cache cannot discard model audio references during progress save
+  ---
+  duration_ms: 21.694254
+  type: 'test'
+  ...
+# Subtest: legacy lesson and preferences move to Firebase before localStorage and model backups are removed
+ok 45 - legacy lesson and preferences move to Firebase before localStorage and model backups are removed
+  ---
+  duration_ms: 25.084472
+  type: 'test'
+  ...
+# Subtest: malformed legacy data remains intact and unrelated private workspaces are not migrated
+ok 46 - malformed legacy data remains intact and unrelated private workspaces are not migrated
+  ---
+  duration_ms: 5.960908
+  type: 'test'
+  ...
+# Subtest: server acknowledgement is required for synced status; offline updates stay pending
+ok 47 - server acknowledgement is required for synced status; offline updates stay pending
+  ---
+  duration_ms: 2.568476
+  type: 'test'
+  ...
+# Subtest: edits to appearance during initial load merge only changed fields with server settings
+ok 48 - edits to appearance during initial load merge only changed fields with server settings
+  ---
+  duration_ms: 3.160253
+  type: 'test'
+  ...
+# Subtest: simultaneous appearance edits use the existing version-choice flow
+ok 49 - simultaneous appearance edits use the existing version-choice flow
+  ---
+  duration_ms: 2.669188
+  type: 'test'
+  ...
+# Subtest: appearance document name is not reserved by Firestore
+ok 50 - appearance document name is not reserved by Firestore
+  ---
+  duration_ms: 0.267843
+  type: 'test'
+  ...
+# Subtest: MP3 conversion history and playback settings survive a fresh device
+ok 51 - MP3 conversion history and playback settings survive a fresh device
+  ---
+  duration_ms: 22.15354
+  type: 'test'
+  ...
+# Subtest: newer legacy edits are protected even when the old cloud commit has a later network timestamp
+ok 52 - newer legacy edits are protected even when the old cloud commit has a later network timestamp
+  ---
+  duration_ms: 5.640522
+  type: 'test'
+  ...
+# Subtest: ordinary root URLs independently select the same configured Firebase library without localStorage writes
+ok 53 - ordinary root URLs independently select the same configured Firebase library without localStorage writes
+  ---
+  duration_ms: 52.109239
+  type: 'test'
+  ...
+# Subtest: two simultaneous first visits bootstrap preferences without an unnecessary conflict
+ok 54 - two simultaneous first visits bootstrap preferences without an unnecessary conflict
+  ---
+  duration_ms: 2.950953
+  type: 'test'
+  ...
+# Subtest: independent appearance fields merge, while different edits to the same field retain the version-choice flow
+ok 55 - independent appearance fields merge, while different edits to the same field retain the version-choice flow
+  ---
+  duration_ms: 5.08202
+  type: 'test'
+  ...
+# Subtest: a delayed poll cannot undo an acknowledged newer local commit
+ok 56 - a delayed poll cannot undo an acknowledged newer local commit
+  ---
+  duration_ms: 4.678303
+  type: 'test'
+  ...
+# Subtest: typing during an asynchronous remote body read stays local until the existing conflict is resolved
+ok 57 - typing during an asynchronous remote body read stays local until the existing conflict is resolved
+  ---
+  duration_ms: 7.575254
+  type: 'test'
+  ...
+# Subtest: one unreadable record does not stop the rest of the library from loading
+ok 58 - one unreadable record does not stop the rest of the library from loading
+  ---
+  duration_ms: 5.706941
+  type: 'test'
+  ...
+# Subtest: repeated identical saves and retained history never delete the current body chunks
+ok 59 - repeated identical saves and retained history never delete the current body chunks
+  ---
+  duration_ms: 19.157414
+  type: 'test'
+  ...
+# Subtest: an older acknowledgement cannot erase a newer disk checkpoint
+ok 60 - an older acknowledgement cannot erase a newer disk checkpoint
+  ---
+  duration_ms: 4.764132
+  type: 'test'
+  ...
+# Subtest: offline progress, preferences and generated audio survive a fresh-RAM restart; confirmed writes clear the journal
+ok 61 - offline progress, preferences and generated audio survive a fresh-RAM restart; confirmed writes clear the journal
+  ---
+  duration_ms: 32.943963
+  type: 'test'
+  ...
+# Subtest: a response lost after Firebase committed is recognized on restart rather than treated as a conflicting edit
+ok 62 - a response lost after Firebase committed is recognized on restart rather than treated as a conflicting edit
+  ---
+  duration_ms: 25.062739
+  type: 'test'
+  ...
+# Subtest: editing again while a write is waiting for acknowledgement preserves the newer checkpoint and sends it next
+ok 63 - editing again while a write is waiting for acknowledgement preserves the newer checkpoint and sends it next
+  ---
+  duration_ms: 23.282038
+  type: 'test'
+  ...
+# Subtest: preference acknowledgement loss does not cause a duplicate write or reset appearance after restart
+ok 64 - preference acknowledgement loss does not cause a duplicate write or reset appearance after restart
+  ---
+  duration_ms: 10.155172
+  type: 'test'
+  ...
+# Subtest: offline preference replay merges distinct fields but does not silently overwrite a conflicting server field
+ok 65 - offline preference replay merges distinct fields but does not silently overwrite a conflicting server field
+  ---
+  duration_ms: 22.021791
+  type: 'test'
+  ...
+# Subtest: old URLs are remembered as migration sources across reloads but never select a different destination
+ok 66 - old URLs are remembered as migration sources across reloads but never select a different destination
+  ---
+  duration_ms: 0.799263
+  type: 'test'
+  ...
+# Subtest: old encrypted lessons and model audio migrate once, preserve local recordings, and leave the source cloud intact
+ok 67 - old encrypted lessons and model audio migrate once, preserve local recordings, and leave the source cloud intact
+  ---
+  duration_ms: 26.237102
+  type: 'test'
+  ...
+# Subtest: reopening an old link preserves newer shared edits; changed old data is kept as a separate backup
+ok 68 - reopening an old link preserves newer shared edits; changed old data is kept as a separate backup
+  ---
+  duration_ms: 22.945212
+  type: 'test'
+  ...
+# Subtest: a deleted migrated lesson is not resurrected by reopening its old link
+ok 69 - a deleted migrated lesson is not resurrected by reopening its old link
+  ---
+  duration_ms: 15.043687
+  type: 'test'
+  ...
+# Subtest: two concurrent devices import an old workspace into a single destination lesson
+ok 70 - two concurrent devices import an old workspace into a single destination lesson
+  ---
+  duration_ms: 9.170505
+  type: 'test'
+  ...
+# Subtest: interrupted migration keeps legacy local data until a retry is acknowledged, then clears only the old app keys
+ok 71 - interrupted migration keeps legacy local data until a retry is acknowledged, then clears only the old app keys
+  ---
+  duration_ms: 8.64252
+  type: 'test'
+  ...
+# Subtest: REST watcher reports successful unchanged polls after a failure and resumes on focus/online
+ok 72 - REST watcher reports successful unchanged polls after a failure and resumes on focus/online
+  ---
+  duration_ms: 73.131231
+  type: 'test'
+  ...
+# Subtest: per-reader profiles, narrator statistics and legacy defaults survive validation
+ok 73 - per-reader profiles, narrator statistics and legacy defaults survive validation
+  ---
+  duration_ms: 23.492335
+  type: 'test'
+  ...
+# Subtest: paragraphs group into one request, dialogues preserve reader changes
+ok 74 - paragraphs group into one request, dialogues preserve reader changes
+  ---
+  duration_ms: 5.681703
+  type: 'test'
+  ...
+# Subtest: playback speed does not regenerate speech; synthesis controls do
+ok 75 - playback speed does not regenerate speech; synthesis controls do
+  ---
+  duration_ms: 10.686337
+  type: 'test'
+  ...
+# Subtest: real MP3 frames trim trailing silence without truncating a frame
+ok 76 - real MP3 frames trim trailing silence without truncating a frame
+  ---
+  duration_ms: 8.311682
+  type: 'test'
+  ...
+# Subtest: one paragraph MP3 has sentence and word boundaries; full file round trip
+ok 77 - one paragraph MP3 has sentence and word boundaries; full file round trip
+  ---
+  duration_ms: 11.696688
+  type: 'test'
+  ...
+# Subtest: root URLs share a stable workspace; old private links become migration sources without localStorage writes
+ok 78 - root URLs share a stable workspace; old private links become migration sources without localStorage writes
+  ---
+  duration_ms: 2.233252
+  type: 'test'
+  ...
+# Subtest: AES-GCM rejects tampering, a wrong private link and swapped contexts
+ok 79 - AES-GCM rejects tampering, a wrong private link and swapped contexts
+  ---
+  duration_ms: 3.076416
+  type: 'test'
+  ...
+# Subtest: encrypted Firebase transport round trip retains lesson, notes, progress and audio
+ok 80 - encrypted Firebase transport round trip retains lesson, notes, progress and audio
+  ---
+  duration_ms: 17.553645
+  type: 'test'
+  ...
+# Subtest: legacy adapter queue retries offline changes after reopening
+ok 81 - legacy adapter queue retries offline changes after reopening
+  ---
+  duration_ms: 3.583885
+  type: 'test'
+  ...
+# Subtest: simultaneous edits expose a conflict and either version can be chosen
+ok 82 - simultaneous edits expose a conflict and either version can be chosen
+  ---
+  duration_ms: 14.977086
+  type: 'test'
+  ...
+# Subtest: changes made during an upload remain queued with the new base revision
+ok 83 - changes made during an upload remain queued with the new base revision
+  ---
+  duration_ms: 6.735289
+  type: 'test'
+  ...
+# Subtest: a committed write with a lost acknowledgement is recovered, not mistaken for a conflict
+ok 84 - a committed write with a lost acknowledgement is recovered, not mistaken for a conflict
+  ---
+  duration_ms: 4.399623
+  type: 'test'
+  ...
+# Subtest: Unicode chunks preserve emoji and stay under Firestore document limits
+ok 85 - Unicode chunks preserve emoji and stay under Firestore document limits
+  ---
+  duration_ms: 146.850452
+  type: 'test'
+  ...
+# Subtest: deletion syncs as a tombstone and does not return on another device
+ok 86 - deletion syncs as a tombstone and does not return on another device
+  ---
+  duration_ms: 4.124319
+  type: 'test'
+  ...
+# Subtest: missing media retains Firebase audio references while local progress uploads
+ok 87 - missing media retains Firebase audio references while local progress uploads
+  ---
+  duration_ms: 12.749894
+  type: 'test'
+  ...
+# Subtest: REST fallback paginates, preserves ciphertext fields and uses server preconditions
+ok 88 - REST fallback paginates, preserves ciphertext fields and uses server preconditions
+  ---
+  duration_ms: 5.265677
+  type: 'test'
+  ...
+# Subtest: REST fallback maps permission errors and distinguishes absent documents
+ok 89 - REST fallback maps permission errors and distinguishes absent documents
+  ---
+  duration_ms: 0.849689
+  type: 'test'
+  ...
+# Subtest: auto translates each sentence and whole dialogue, without changing learning state
+ok 90 - auto translates each sentence and whole dialogue, without changing learning state
+  ---
+  duration_ms: 34.762467
+  type: 'test'
+  ...
+# Subtest: translation and appearance survive export/import and legacy adapter reload
+ok 91 - translation and appearance survive export/import and legacy adapter reload
+  ---
+  duration_ms: 4.998124
+  type: 'test'
+  ...
+# Subtest: manual translations are preserved, including edits made during a request
+ok 92 - manual translations are preserved, including edits made during a request
+  ---
+  duration_ms: 0.977411
+  type: 'test'
+  ...
+# Subtest: editing English in flight discards stale results and translates new text
+ok 93 - editing English in flight discards stale results and translates new text
+  ---
+  duration_ms: 2.310088
+  type: 'test'
+  ...
+# Subtest: provider failure keeps the lesson usable and retry preserves partial translations
+ok 94 - provider failure keeps the lesson usable and retry preserves partial translations
+  ---
+  duration_ms: 1.456543
+  type: 'test'
+  ...
+# Subtest: canceling or replacing a lesson cannot write an old translation into its replacement
+ok 95 - canceling or replacing a lesson cannot write an old translation into its replacement
+  ---
+  duration_ms: 1.041848
+  type: 'test'
+  ...
+# Subtest: long text, paragraph cache and sentence identifiers remain bounded and unambiguous
+ok 96 - long text, paragraph cache and sentence identifiers remain bounded and unambiguous
+  ---
+  duration_ms: 6.021935
+  type: 'test'
+  ...
+# Subtest: stale auto translations are detected, legacy manual translations remain valid
+ok 97 - stale auto translations are detected, legacy manual translations remain valid
+  ---
+  duration_ms: 0.235524
+  type: 'test'
+  ...
+# Subtest: a recovered paragraph cache is reused without another provider request
+ok 98 - a recovered paragraph cache is reused without another provider request
+  ---
+  duration_ms: 0.587965
+  type: 'test'
+  ...
+# Subtest: a long Vietnamese translation is not truncated when saved or reopened
+ok 99 - a long Vietnamese translation is not truncated when saved or reopened
+  ---
+  duration_ms: 0.555416
+  type: 'test'
+  ...
+# Subtest: custom colors remain readable in both themes, malformed settings are sanitized
+ok 100 - custom colors remain readable in both themes, malformed settings are sanitized
+  ---
+  duration_ms: 1.095969
+  type: 'test'
+  ...
+1..100
+# tests 100
+# suites 0
+# pass 100
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 513.340427

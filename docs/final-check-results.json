@@ -1,0 +1,60 @@
+{
+  "updatedAt": "2026-10-10",
+  "scope": "Final translations, Vietnamese font, themes, sounds and Review effects",
+  "automated": {
+    "node": {
+      "passed": 55,
+      "failed": 0,
+      "report": "final-core-tests.txt"
+    },
+    "python": {
+      "passed": 16,
+      "failed": 0,
+      "report": "final-api-tests.txt"
+    },
+    "totalPassed": 71
+  },
+  "liveTranslation": {
+    "initialItems": 3,
+    "initialFailed": 0,
+    "longParagraphCharacters": 1199,
+    "longFailed": 0,
+    "reports": [
+      "translation-live-report.json",
+      "translation-long-live-report.json"
+    ]
+  },
+  "preservation": {
+    "retainedControlIDs": 188,
+    "unchangedCoreExports": 26,
+    "unchangedFiles": 14,
+    "originalLayoutDeclarationsUnchanged": true,
+    "report": "final-feature-preservation.json"
+  },
+  "font": {
+    "family": "Be Vietnam Pro",
+    "weights": [
+      400,
+      500,
+      600,
+      700
+    ],
+    "checkedCodepointsPerWeight": 122,
+    "missingGlyphs": 0
+  },
+  "browser": {
+    "status": "blocked",
+    "reason": "Chromium unavailable; Playwright Chromium download failed with an invalid archive. No current browser suite counted as passed.",
+    "newSuite": "tests/enhancements-browser.mjs"
+  },
+  "deployment": {
+    "vercelDeployed": false,
+    "firebaseLiveRetested": false
+  },
+  "historicalReports": [
+    "check-results.json",
+    "presentation-ui-report.json",
+    "upgrade-ui-report.json",
+    "firebase-live-report.json"
+  ]
+}
