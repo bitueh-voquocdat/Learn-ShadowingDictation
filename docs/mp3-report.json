@@ -1,9 +1,0 @@
-{
-  "converter": {
-    "format": {
-      "duration": "3.864000",
-      "size": "23184"
-    }
-  },
-  "decode": "ffmpeg decoded to completion without errors"
-}
